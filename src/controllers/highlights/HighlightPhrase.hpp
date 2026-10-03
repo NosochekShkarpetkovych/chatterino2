@@ -86,6 +86,9 @@ public:
     bool hasSpecial() const;
     void setSpecial(const QString &phrases, std::shared_ptr<QColor> color);
     bool isSpecialMatch(const QString &message, const QString &userLogin) const;
+    /// If true, the sound only plays for messages matching the special phrases
+    bool soundOnlySpecial() const;
+    void setSoundOnlySpecial(bool value);
 
     /*
      * XXX: Use the constexpr constructor here once we are building with
@@ -120,6 +123,7 @@ private:
     QString specialPhrases_;
     std::shared_ptr<QColor> specialColor_ =
         std::make_shared<QColor>(0, 0, 0, 0);
+    bool soundOnlySpecial_ = false;
 };
 
 }  // namespace chatterino
@@ -154,6 +158,8 @@ struct Serialize<chatterino::HighlightPhrase> {
                             a);
         chatterino::rj::set(ret, "specialColor",
                             value.getSpecialColor()->name(QColor::HexArgb), a);
+        chatterino::rj::set(ret, "soundOnlySpecial", value.soundOnlySpecial(),
+                            a);
 
         return ret;
     }
@@ -181,6 +187,7 @@ struct Deserialize<chatterino::HighlightPhrase> {
         QString encodedColor;
         QString _specialPhrases;
         QString encodedSpecialColor;
+        bool _soundOnlySpecial = false;
 
         chatterino::rj::getSafe(value, "pattern", _pattern);
         chatterino::rj::getSafe(value, "showInMentions", _showInMentions);
@@ -192,6 +199,7 @@ struct Deserialize<chatterino::HighlightPhrase> {
         chatterino::rj::getSafe(value, "color", encodedColor);
         chatterino::rj::getSafe(value, "specialPhrases", _specialPhrases);
         chatterino::rj::getSafe(value, "specialColor", encodedSpecialColor);
+        chatterino::rj::getSafe(value, "soundOnlySpecial", _soundOnlySpecial);
 
         auto _color = QColor(encodedColor);
         if (!_color.isValid())
@@ -210,6 +218,7 @@ struct Deserialize<chatterino::HighlightPhrase> {
                                            _isCaseSensitive, _soundUrl, _color);
         phrase.setSpecial(_specialPhrases,
                           std::make_shared<QColor>(_specialColor));
+        phrase.setSoundOnlySpecial(_soundOnlySpecial);
         return phrase;
     }
 };

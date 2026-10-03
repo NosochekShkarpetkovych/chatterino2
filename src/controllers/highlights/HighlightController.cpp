@@ -311,7 +311,7 @@ void rebuildUserHighlights(Settings &settings,
 
                 return HighlightResult{
                     highlight.hasAlert(),        //
-                    highlight.hasSound(),        //
+                    highlight.hasSound() && !highlight.soundOnlySpecial(),  //
                     highlightSoundUrl,           //
                     highlight.getColor(),        //
                     highlight.showInMentions(),  //

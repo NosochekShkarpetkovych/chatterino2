@@ -45,6 +45,8 @@ HighlightPhrase UserHighlightModel::getItemFromRow(
     phrase.setSpecial(
         row[SpecialPhrases]->data(Qt::DisplayRole).toString().trimmed(),
         specialColor);
+    phrase.setSoundOnlySpecial(
+        row[SpecialSoundOnly]->data(Qt::CheckStateRole).toBool());
     return phrase;
 }
 
@@ -67,6 +69,7 @@ void UserHighlightModel::afterInit()
     messagesRow[Column::SoundPath]->setFlags({});
     messagesRow[SpecialPhrases]->setFlags({});
     messagesRow[SpecialColor]->setFlags({});
+    messagesRow[SpecialSoundOnly]->setFlags({});
 
     auto selfColor =
         ColorProvider::instance().color(ColorType::SelfMessageHighlight);
@@ -140,6 +143,7 @@ void UserHighlightModel::getRowFromItem(const HighlightPhrase &item,
     setColorItem(row[Column::Color], *item.getColor());
     setStringItem(row[SpecialPhrases], item.getSpecialPhrases());
     setColorItem(row[SpecialColor], *item.getSpecialColor());
+    setBoolItem(row[SpecialSoundOnly], item.soundOnlySpecial());
 }
 
 }  // namespace chatterino

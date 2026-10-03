@@ -135,7 +135,7 @@ HighlightingPage::HighlightingPage()
                                  "Flash\ntaskbar", "Enable\nregex",
                                  "Case-\nsensitive", "Play\nsound",
                                  "Custom\nsound", "Color", "Special\nphrases",
-                                 "Special\ncolor"});
+                                 "Special\ncolor", "Sound only\non phrases"});
                 view->getTableView()->horizontalHeader()->setSectionResizeMode(
                     QHeaderView::Fixed);
                 view->getTableView()->horizontalHeader()->setSectionResizeMode(

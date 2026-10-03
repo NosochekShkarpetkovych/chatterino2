@@ -51,6 +51,7 @@ bool HighlightPhrase::operator==(const HighlightPhrase &other) const
                     other.hasAlert_, other.isRegex_, other.isCaseSensitive_,
                     other.soundUrl_, other.color_) &&
            this->specialPhrases_ == other.specialPhrases_ &&
+           this->soundOnlySpecial_ == other.soundOnlySpecial_ &&
            *this->specialColor_ == *other.specialColor_;
 }
 
@@ -181,6 +182,16 @@ void HighlightPhrase::setSpecial(const QString &phrases,
     {
         this->specialColor_ = std::make_shared<QColor>(0, 0, 0, 0);
     }
+}
+
+bool HighlightPhrase::soundOnlySpecial() const
+{
+    return this->soundOnlySpecial_;
+}
+
+void HighlightPhrase::setSoundOnlySpecial(bool value)
+{
+    this->soundOnlySpecial_ = value;
 }
 
 bool HighlightPhrase::isSpecialMatch(const QString &message,

@@ -23,7 +23,8 @@ public:
     enum SpecialColumn {
         SpecialPhrases = Column::COUNT,
         SpecialColor = Column::COUNT + 1,
-        TotalColumnCount = Column::COUNT + 2,
+        SpecialSoundOnly = Column::COUNT + 2,
+        TotalColumnCount = Column::COUNT + 3,
     };
 
     explicit UserHighlightModel(QObject *parent);
