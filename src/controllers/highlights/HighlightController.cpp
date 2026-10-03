@@ -320,6 +320,53 @@ void rebuildUserHighlights(Settings &settings,
     }
 }
 
+void rebuildSpecialUserHighlights(Settings &settings,
+                                  std::vector<HighlightCheck> &checks)
+{
+    auto userHighlights = settings.highlightedUsers.readOnly();
+
+    for (const auto &highlight : *userHighlights)
+    {
+        if (!highlight.hasSpecial())
+        {
+            continue;
+        }
+
+        checks.emplace_back(HighlightCheck{
+            [highlight](const auto & /*args*/, const auto & /*twitchBadges*/,
+                        const auto &senderName, const auto &originalMessage,
+                        const auto & /*flags*/,
+                        const auto /*self*/) -> std::optional<HighlightResult> {
+                if (!highlight.isMatch(senderName))
+                {
+                    return std::nullopt;
+                }
+
+                auto currentUser =
+                    getApp()->getAccounts()->twitch.getCurrent();
+                if (!highlight.isSpecialMatch(originalMessage,
+                                              currentUser->getUserName()))
+                {
+                    return std::nullopt;
+                }
+
+                std::optional<QUrl> highlightSoundUrl;
+                if (highlight.hasCustomSound())
+                {
+                    highlightSoundUrl = highlight.getSoundUrl();
+                }
+
+                return HighlightResult{
+                    true,                         // flash taskbar
+                    highlight.hasSound(),         //
+                    highlightSoundUrl,            //
+                    highlight.getSpecialColor(),  //
+                    true,                         // show in mentions
+                };
+            }});
+    }
+}
+
 void rebuildBadgeHighlights(Settings &settings,
                             std::vector<HighlightCheck> &checks)
 {
@@ -457,11 +504,14 @@ void HighlightController::rebuildChecks(Settings &settings)
     checks->clear();
 
     // CURRENT ORDER:
-    // Subscription -> Whisper -> Message -> Reply Threads -> User -> Badge
+    // Subscription -> Whisper -> Special Users -> Message -> Reply Threads
+    // -> User -> Badge
 
     rebuildSubscriptionHighlights(settings, *checks);
 
     rebuildWhisperHighlights(settings, *checks);
+
+    rebuildSpecialUserHighlights(settings, *checks);
 
     rebuildMessageHighlights(settings, *checks);
 

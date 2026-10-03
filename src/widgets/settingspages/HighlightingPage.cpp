@@ -134,7 +134,8 @@ HighlightingPage::HighlightingPage()
                 view->setTitles({"Username", "Show in\nMentions",
                                  "Flash\ntaskbar", "Enable\nregex",
                                  "Case-\nsensitive", "Play\nsound",
-                                 "Custom\nsound", "Color"});
+                                 "Custom\nsound", "Color", "Special\nphrases",
+                                 "Special\ncolor"});
                 view->getTableView()->horizontalHeader()->setSectionResizeMode(
                     QHeaderView::Fixed);
                 view->getTableView()->horizontalHeader()->setSectionResizeMode(
@@ -142,12 +143,17 @@ HighlightingPage::HighlightingPage()
                 view->getTableView()->setItemDelegateForColumn(
                     UserHighlightModel::Column::Color,
                     new ColorItemDelegate(view));
+                view->getTableView()->setItemDelegateForColumn(
+                    UserHighlightModel::SpecialColor,
+                    new ColorItemDelegate(view));
 
                 // fourtf: make class extrend BaseWidget and add this to
                 // dpiChanged
                 QTimer::singleShot(1, [view] {
                     view->getTableView()->resizeColumnsToContents();
                     view->getTableView()->setColumnWidth(0, 200);
+                    view->getTableView()->setColumnWidth(
+                        UserHighlightModel::SpecialPhrases, 200);
                 });
 
                 // We can safely ignore this signal connection since we own the view
@@ -376,6 +382,11 @@ void HighlightingPage::tableCellClicked(const QModelIndex &clicked,
                 this->openSoundDialog(clicked, view, Column::SoundPath);
             }
             else if (clicked.column() == Column::Color)
+            {
+                this->openColorDialog(clicked, view, tab);
+            }
+            else if (tab == HighlightTab::Users &&
+                     clicked.column() == UserHighlightModel::SpecialColor)
             {
                 this->openColorDialog(clicked, view, tab);
             }

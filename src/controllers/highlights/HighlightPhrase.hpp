@@ -78,6 +78,15 @@ public:
     const QUrl &getSoundUrl() const;
     const std::shared_ptr<QColor> getColor() const;
 
+    /// Comma-separated phrases. Together with an "@mention" of the current
+    /// user they trigger the "special" highlight of this user.
+    const QString &getSpecialPhrases() const;
+    const std::shared_ptr<QColor> getSpecialColor() const;
+    /// The special highlight is only active if its color is not transparent
+    bool hasSpecial() const;
+    void setSpecial(const QString &phrases, std::shared_ptr<QColor> color);
+    bool isSpecialMatch(const QString &message, const QString &userLogin) const;
+
     /*
      * XXX: Use the constexpr constructor here once we are building with
      * Qt>=5.13.
@@ -108,6 +117,9 @@ private:
     QUrl soundUrl_;
     std::shared_ptr<QColor> color_;
     QRegularExpression regex_;
+    QString specialPhrases_;
+    std::shared_ptr<QColor> specialColor_ =
+        std::make_shared<QColor>(0, 0, 0, 0);
 };
 
 }  // namespace chatterino
@@ -138,6 +150,10 @@ struct Serialize<chatterino::HighlightPhrase> {
         chatterino::rj::set(ret, "soundUrl", value.getSoundUrl().toString(), a);
         chatterino::rj::set(ret, "color",
                             value.getColor()->name(QColor::HexArgb), a);
+        chatterino::rj::set(ret, "specialPhrases", value.getSpecialPhrases(),
+                            a);
+        chatterino::rj::set(ret, "specialColor",
+                            value.getSpecialColor()->name(QColor::HexArgb), a);
 
         return ret;
     }
@@ -163,6 +179,8 @@ struct Deserialize<chatterino::HighlightPhrase> {
         bool _isCaseSensitive = false;
         QString _soundUrl;
         QString encodedColor;
+        QString _specialPhrases;
+        QString encodedSpecialColor;
 
         chatterino::rj::getSafe(value, "pattern", _pattern);
         chatterino::rj::getSafe(value, "showInMentions", _showInMentions);
@@ -172,6 +190,8 @@ struct Deserialize<chatterino::HighlightPhrase> {
         chatterino::rj::getSafe(value, "case", _isCaseSensitive);
         chatterino::rj::getSafe(value, "soundUrl", _soundUrl);
         chatterino::rj::getSafe(value, "color", encodedColor);
+        chatterino::rj::getSafe(value, "specialPhrases", _specialPhrases);
+        chatterino::rj::getSafe(value, "specialColor", encodedSpecialColor);
 
         auto _color = QColor(encodedColor);
         if (!_color.isValid())
@@ -179,9 +199,18 @@ struct Deserialize<chatterino::HighlightPhrase> {
             _color = chatterino::HighlightPhrase::FALLBACK_HIGHLIGHT_COLOR;
         }
 
-        return chatterino::HighlightPhrase(_pattern, _showInMentions, _hasAlert,
-                                           _hasSound, _isRegex,
+        auto _specialColor = QColor(encodedSpecialColor);
+        if (!_specialColor.isValid())
+        {
+            _specialColor = QColor(0, 0, 0, 0);
+        }
+
+        chatterino::HighlightPhrase phrase(_pattern, _showInMentions,
+                                           _hasAlert, _hasSound, _isRegex,
                                            _isCaseSensitive, _soundUrl, _color);
+        phrase.setSpecial(_specialPhrases,
+                          std::make_shared<QColor>(_specialColor));
+        return phrase;
     }
 };
 

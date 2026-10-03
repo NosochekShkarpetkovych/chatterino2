@@ -19,6 +19,13 @@ class UserHighlightModel : public SignalVectorModel<HighlightPhrase>
 public:
     using Column = HighlightModel::Column;
 
+    // Extra columns that only exist in the user highlights table
+    enum SpecialColumn {
+        SpecialPhrases = Column::COUNT,
+        SpecialColor = Column::COUNT + 1,
+        TotalColumnCount = Column::COUNT + 2,
+    };
+
     explicit UserHighlightModel(QObject *parent);
 
 protected:

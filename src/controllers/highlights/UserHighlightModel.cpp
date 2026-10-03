@@ -15,7 +15,7 @@ namespace chatterino {
 
 // commandmodel
 UserHighlightModel::UserHighlightModel(QObject *parent)
-    : SignalVectorModel<HighlightPhrase>(Column::COUNT, parent)
+    : SignalVectorModel<HighlightPhrase>(TotalColumnCount, parent)
 {
 }
 
@@ -29,7 +29,11 @@ HighlightPhrase UserHighlightModel::getItemFromRow(
     *highlightColor =
         row[Column::Color]->data(Qt::DecorationRole).value<QColor>();
 
-    return HighlightPhrase{
+    auto specialColor = original.getSpecialColor();
+    *specialColor =
+        row[SpecialColor]->data(Qt::DecorationRole).value<QColor>();
+
+    HighlightPhrase phrase{
         row[Column::Pattern]->data(Qt::DisplayRole).toString().trimmed(),
         row[Column::ShowInMentions]->data(Qt::CheckStateRole).toBool(),
         row[Column::FlashTaskbar]->data(Qt::CheckStateRole).toBool(),
@@ -38,6 +42,10 @@ HighlightPhrase UserHighlightModel::getItemFromRow(
         row[Column::CaseSensitive]->data(Qt::CheckStateRole).toBool(),
         row[Column::SoundPath]->data(Qt::UserRole).toString(),
         highlightColor};
+    phrase.setSpecial(
+        row[SpecialPhrases]->data(Qt::DisplayRole).toString().trimmed(),
+        specialColor);
+    return phrase;
 }
 
 void UserHighlightModel::afterInit()
@@ -57,6 +65,8 @@ void UserHighlightModel::afterInit()
     messagesRow[Column::UseRegex]->setFlags({});
     messagesRow[Column::CaseSensitive]->setFlags({});
     messagesRow[Column::SoundPath]->setFlags({});
+    messagesRow[SpecialPhrases]->setFlags({});
+    messagesRow[SpecialColor]->setFlags({});
 
     auto selfColor =
         ColorProvider::instance().color(ColorType::SelfMessageHighlight);
@@ -128,6 +138,8 @@ void UserHighlightModel::getRowFromItem(const HighlightPhrase &item,
     setBoolItem(row[Column::CaseSensitive], item.isCaseSensitive());
     setFilePathItem(row[Column::SoundPath], item.getSoundUrl());
     setColorItem(row[Column::Color], *item.getColor());
+    setStringItem(row[SpecialPhrases], item.getSpecialPhrases());
+    setColorItem(row[SpecialColor], *item.getSpecialColor());
 }
 
 }  // namespace chatterino

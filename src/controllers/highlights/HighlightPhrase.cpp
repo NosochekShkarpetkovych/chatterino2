@@ -5,6 +5,7 @@
 #include "controllers/highlights/HighlightPhrase.hpp"
 
 #include <QStringBuilder>
+#include <QStringList>
 
 namespace chatterino {
 
@@ -48,7 +49,9 @@ bool HighlightPhrase::operator==(const HighlightPhrase &other) const
                     this->soundUrl_, this->color_) ==
            std::tie(other.pattern_, other.showInMentions_, other.hasSound_,
                     other.hasAlert_, other.isRegex_, other.isCaseSensitive_,
-                    other.soundUrl_, other.color_);
+                    other.soundUrl_, other.color_) &&
+           this->specialPhrases_ == other.specialPhrases_ &&
+           *this->specialColor_ == *other.specialColor_;
 }
 
 HighlightPhrase::HighlightPhrase(const QString &pattern, bool showInMentions,
@@ -148,6 +151,65 @@ const QUrl &HighlightPhrase::getSoundUrl() const
 const std::shared_ptr<QColor> HighlightPhrase::getColor() const
 {
     return this->color_;
+}
+
+const QString &HighlightPhrase::getSpecialPhrases() const
+{
+    return this->specialPhrases_;
+}
+
+const std::shared_ptr<QColor> HighlightPhrase::getSpecialColor() const
+{
+    return this->specialColor_;
+}
+
+bool HighlightPhrase::hasSpecial() const
+{
+    return this->specialColor_ && this->specialColor_->isValid() &&
+           this->specialColor_->alpha() > 0;
+}
+
+void HighlightPhrase::setSpecial(const QString &phrases,
+                                 std::shared_ptr<QColor> color)
+{
+    this->specialPhrases_ = phrases;
+    if (color)
+    {
+        this->specialColor_ = std::move(color);
+    }
+    else
+    {
+        this->specialColor_ = std::make_shared<QColor>(0, 0, 0, 0);
+    }
+}
+
+bool HighlightPhrase::isSpecialMatch(const QString &message,
+                                     const QString &userLogin) const
+{
+    if (!this->hasSpecial())
+    {
+        return false;
+    }
+
+    if (!userLogin.isEmpty() &&
+        message.contains(QStringLiteral("@") + userLogin,
+                         Qt::CaseInsensitive))
+    {
+        return true;
+    }
+
+    const auto phrases = this->specialPhrases_.split(QChar(u','), Qt::SkipEmptyParts);
+    for (const auto &phrase : phrases)
+    {
+        const auto trimmed = phrase.trimmed();
+        if (!trimmed.isEmpty() &&
+            message.contains(trimmed, Qt::CaseInsensitive))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 }  // namespace chatterino
