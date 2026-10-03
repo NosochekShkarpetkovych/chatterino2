@@ -82,6 +82,8 @@ enum class MessageFlag : std::int64_t {
     UncategorizedNotification = (1LL << 45),
     /// The message was detected as ASCII art and has its layout width limited to the default web chat width.
     AsciiArt = (1LL << 46),
+    /// The message is a direct reply to a message sent by the current user
+    ReplyToSelf = (1LL << 47),
 };
 using MessageFlags = FlagsEnum<MessageFlag>;
 

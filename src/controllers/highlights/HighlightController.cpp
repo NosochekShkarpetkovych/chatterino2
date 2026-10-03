@@ -170,7 +170,7 @@ void rebuildReplyThreadHighlight(Settings &settings,
                 const auto & /*senderName*/, const auto & /*originalMessage*/,
                 const auto &flags,
                 const auto self) -> std::optional<HighlightResult> {
-                if (flags.has(MessageFlag::SubscribedThread) && !self)
+                if (flags.has(MessageFlag::ReplyToSelf) && !self)
                 {
                     return HighlightResult{
                         highlightAlert,

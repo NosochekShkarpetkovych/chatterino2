@@ -2562,6 +2562,21 @@ void MessageBuilder::parseThread(const QString &messageContent,
             this->message().flags.set(MessageFlag::SubscribedThread);
         }
 
+        // direct reply to a message of the current user
+        QString replyParentLogin =
+            tags.value("reply-parent-user-login").toString();
+        if (replyParentLogin.isEmpty() && parent)
+        {
+            replyParentLogin = parent->loginName;
+        }
+        auto currentUser = getApp()->getAccounts()->twitch.getCurrent();
+        if (!replyParentLogin.isEmpty() &&
+            replyParentLogin.compare(currentUser->getUserName(),
+                                     Qt::CaseInsensitive) == 0)
+        {
+            this->message().flags.set(MessageFlag::ReplyToSelf);
+        }
+
         // enable reply flag
         this->message().flags.set(MessageFlag::ReplyMessage);
 
