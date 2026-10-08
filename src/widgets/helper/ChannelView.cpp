@@ -2784,7 +2784,28 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
 
     auto chan = this->effectiveSourceChannel();
     auto *twitchChannel = dynamic_cast<TwitchChannel *>(chan.get());
-    if (!layout->getMessage()->id.isEmpty() && twitchChannel &&
+
+    // Messages from the yt-chat plugin have ids starting with "yt-chat-".
+    const bool isYoutube = layout->getMessage()->id.startsWith("yt-chat-");
+    if (isYoutube && chan)
+    {
+        menu->addSeparator();
+        auto *ytModerateAction = menu->addAction("Mo&derate");
+        auto *ytModerateMenu = new QMenu(menu);
+        ytModerateAction->setMenu(ytModerateMenu);
+        ytModerateMenu->addAction(
+            "&Delete message", [chan, id = layout->getMessage()->id] {
+                // The plugin's /del deletes the message on YouTube
+                QString value = getApp()->getCommands()->execCommand(
+                    "/del " + id, chan, false);
+                if (!value.isEmpty())
+                {
+                    chan->sendMessage(value);
+                }
+            });
+    }
+
+    if (!isYoutube && !layout->getMessage()->id.isEmpty() && twitchChannel &&
         twitchChannel->hasModRights())
     {
         menu->addSeparator();
