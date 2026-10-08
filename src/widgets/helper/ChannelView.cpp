@@ -2476,7 +2476,9 @@ void ChannelView::handleMouseClick(QMouseEvent *event,
             {
                 this->linkClicked.invoke(link, event->modifiers());
 
-                if (this->context_ == Context::None)
+                // yt-chat: reply is done with a right click, not a left click
+                if (this->context_ == Context::None &&
+                    !layout->getMessage()->id.startsWith("yt-chat-"))
                 {
                     auto *split = dynamic_cast<Split *>(this->parentWidget());
                     if (split)
@@ -2488,6 +2490,23 @@ void ChannelView::handleMouseClick(QMouseEvent *event,
         }
         break;
         case Qt::RightButton: {
+            // yt-chat: right click on a YouTube nickname starts a reply
+            if (this->context_ == Context::None && hoveredElement != nullptr &&
+                layout->getMessage()->id.startsWith("yt-chat-"))
+            {
+                const auto &ytLink = hoveredElement->getLink();
+                if (ytLink.type == Link::InsertText &&
+                    ytLink.value.startsWith("/yt "))
+                {
+                    auto *ytSplit = dynamic_cast<Split *>(this->parentWidget());
+                    if (ytSplit)
+                    {
+                        ytSplit->insertTextToInput(ytLink.value);
+                    }
+                    return;
+                }
+            }
+
             // insert user mention to input, only in default context
             if ((this->context_ == Context::None) &&
                 (hoveredElement != nullptr))

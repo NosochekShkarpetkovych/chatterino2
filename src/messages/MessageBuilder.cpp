@@ -59,6 +59,9 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QFileInfo>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPixmap>
 #include <QStringBuilder>
 #include <QTimeZone>
 
@@ -1770,6 +1773,70 @@ MessagePtrMut MessageBuilder::makeCurrentPinnedMessage(
     return builder.release();
 }
 
+namespace {
+
+/// Small Twitch logo drawn in code. It is shown before every chat message
+/// from Twitch (the yt-chat plugin does the same with a YouTube logo).
+EmotePtr makeTwitchPlatformBadge()
+{
+    static const QPixmap pixmap = [] {
+        QPixmap pm(64, 64);
+        pm.fill(Qt::transparent);
+
+        QPainter painter(&pm);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(145, 70, 255));
+        painter.scale(64.0 / 24.0, 64.0 / 24.0);
+
+        QPainterPath path;
+        path.setFillRule(Qt::OddEvenFill);
+
+        // outer shape of the logo
+        path.addPolygon(QPolygonF{{6.0, 0.0},
+                                  {1.714, 4.286},
+                                  {1.714, 19.714},
+                                  {6.857, 19.714},
+                                  {6.857, 24.0},
+                                  {11.143, 19.714},
+                                  {14.571, 19.714},
+                                  {22.286, 12.0},
+                                  {22.286, 0.0}});
+        path.closeSubpath();
+
+        // hole inside the logo
+        path.addPolygon(QPolygonF{{20.571, 11.143},
+                                  {17.143, 14.571},
+                                  {13.714, 14.571},
+                                  {10.714, 17.571},
+                                  {10.714, 14.571},
+                                  {6.857, 14.571},
+                                  {6.857, 1.714},
+                                  {20.571, 1.714}});
+        path.closeSubpath();
+
+        // two bars
+        path.addRect(11.571, 4.714, 1.715, 5.143);
+        path.addRect(16.286, 4.714, 1.714, 5.143);
+
+        painter.drawPath(path);
+        painter.end();
+
+        return pm;
+    }();
+
+    static const EmotePtr badge = std::make_shared<Emote>(Emote{
+        .name = EmoteName{},
+        .images = ImageSet{Image::fromResourcePixmap(pixmap, 18.F / 64.F)},
+        .tooltip = Tooltip{u"Twitch"_s},
+        .homePage = Url{u"https://www.twitch.tv"_s},
+    });
+
+    return badge;
+}
+
+}  // namespace
+
 std::pair<MessagePtrMut, HighlightAlert> MessageBuilder::makeIrcMessage(
     /* mutable */ Channel *channel, const Communi::IrcMessage *ircMessage,
     const MessageParseArgs &args, /* mutable */ QString content,
@@ -1863,6 +1930,10 @@ std::pair<MessagePtrMut, HighlightAlert> MessageBuilder::makeIrcMessage(
 
         // reply threads
         builder.parseThread(content, tags, channel, thread, parent);
+
+        // platform icon (Twitch), shown before the timestamp
+        builder.emplace<BadgeElement>(makeTwitchPlatformBadge(),
+                                      MessageElementFlag::Username);
 
         // add timestamp
         builder.emplace<TimestampElement>(builder->serverReceivedTime.time());
