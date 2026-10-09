@@ -229,6 +229,14 @@ public:
         const std::shared_ptr<MessageThread> &thread = {},
         const MessagePtr &parent = {});
 
+    /// Runs the highlight rules from Settings -> Highlights (Users, Messages,
+    /// Badges) over a message that did not come from IRC, e.g. one that a
+    /// plugin adds. Sets the highlight flags/color on `message` and returns
+    /// the alert (sound, taskbar flash) for triggerHighlights().
+    static HighlightAlert applyHighlights(Message &message,
+                                          const QString &senderName,
+                                          const QString &messageText);
+
     static MessagePtrMut makeSystemMessageWithUser(
         const QString &text, const QString &loginName,
         const QString &displayName, const MessageColor &userColor,

@@ -2778,6 +2778,47 @@ HighlightAlert MessageBuilder::parseHighlights(Communi::TagsRef tags,
     };
 }
 
+HighlightAlert MessageBuilder::applyHighlights(Message &message,
+                                               const QString &senderName,
+                                               const QString &messageText)
+{
+    if (getSettings()->isBlacklistedUser(senderName))
+    {
+        // Do nothing. We ignore highlights from this user.
+        return {};
+    }
+
+    std::vector<Badge> badges;
+    auto [highlighted, highlightResult] = getApp()->getHighlights()->check(
+        MessageParseArgs{}, badges, senderName, messageText, message.flags);
+
+    if (!highlighted)
+    {
+        return {};
+    }
+
+    message.flags.set(MessageFlag::Highlighted);
+    message.highlightColor = highlightResult.color;
+
+    if (highlightResult.showInMentions)
+    {
+        message.flags.set(MessageFlag::ShowInMentions);
+    }
+
+    auto customSound = [&] {
+        if (highlightResult.customSoundUrl)
+        {
+            return *highlightResult.customSoundUrl;
+        }
+        return QUrl{};
+    }();
+    return {
+        .customSound = customSound,
+        .playSound = highlightResult.playSound,
+        .windowAlert = highlightResult.alert,
+    };
+}
+
 void MessageBuilder::appendChannelName(const Channel *channel)
 {
     QString channelName("#" + channel->getName());

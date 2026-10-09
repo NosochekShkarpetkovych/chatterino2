@@ -12,6 +12,7 @@
 #    include "controllers/plugins/SignalCallback.hpp"
 #    include "controllers/plugins/SolTypes.hpp"
 #    include "messages/Message.hpp"
+#    include "messages/MessageBuilder.hpp"
 #    include "providers/twitch/TwitchChannel.hpp"
 #    include "providers/twitch/TwitchIrcServer.hpp"
 #    include "util/WeakPtrHelpers.hpp"
@@ -119,7 +120,29 @@ void ChannelRef::add_message(std::shared_ptr<Message> &message,
         return {};
     }();
 
-    this->strong()->addMessage(message, ctx, overrideFlags);
+    auto channel = this->strong();
+
+    // Messages from the yt-chat plugin go through the same highlight rules
+    // (Settings -> Highlights) as Twitch messages.
+    const bool isYoutube = message && message->id.startsWith("yt-chat-");
+    HighlightAlert youtubeAlert;
+    if (isYoutube && !message->flags.has(MessageFlag::Highlighted))
+    {
+        QString senderName = message->displayName;
+        if (senderName.startsWith('@'))
+        {
+            senderName = senderName.mid(1);
+        }
+        youtubeAlert = MessageBuilder::applyHighlights(*message, senderName,
+                                                       message->messageText);
+    }
+
+    channel->addMessage(message, ctx, overrideFlags);
+
+    if (isYoutube && ctx == MessageContext::Original)
+    {
+        MessageBuilder::triggerHighlights(channel.get(), youtubeAlert);
+    }
 }
 
 std::vector<MessagePtrMut> ChannelRef::message_snapshot(size_t n_items)
