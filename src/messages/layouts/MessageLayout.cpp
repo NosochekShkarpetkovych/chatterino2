@@ -154,8 +154,31 @@ void MessageLayout::actuallyLayout(const MessageLayoutContext &ctx)
     this->container_.beginLayout(ctx.width, this->scale_, this->imageScale_,
                                  messageFlags);
 
+    // Platform icons: Twitch (BadgeElement drawn by MessageBuilder) and
+    // YouTube (the first element of messages created by the yt-chat plugin)
+    const bool showTwitchIcon = getSettings()->showTwitchPlatformIcon;
+    const bool showYoutubeIcon = getSettings()->showYoutubePlatformIcon;
+    const bool isYoutubeMessage = this->message_->id.startsWith("yt-chat-");
+    const MessageElement *firstElement =
+        this->message_->elements.empty()
+            ? nullptr
+            : this->message_->elements.front().get();
+
     for (const auto &element : this->message_->elements)
     {
+        if (!showYoutubeIcon && isYoutubeMessage &&
+            element.get() == firstElement)
+        {
+            continue;
+        }
+
+        if (!showTwitchIcon &&
+            dynamic_cast<const BadgeElement *>(element.get()) != nullptr &&
+            element->getFlags().has(MessageElementFlag::Username))
+        {
+            continue;
+        }
+
         if (hideModerated && this->message_->flags.has(MessageFlag::Disabled))
         {
             continue;

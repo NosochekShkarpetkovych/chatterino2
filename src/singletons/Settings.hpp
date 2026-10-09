@@ -314,6 +314,12 @@ public:
         "/appearance/badges/useCustomFfzVipBadges", true};
     BoolSetting showBadgesBttv = {"/appearance/badges/bttv", true};
     BoolSetting showBadgesSevenTV = {"/appearance/badges/seventv", true};
+    // Platform icons shown before messages (Twitch is drawn by MessageBuilder,
+    // YouTube is the first element of messages created by the yt-chat plugin)
+    BoolSetting showTwitchPlatformIcon = {
+        "/appearance/badges/twitchPlatformIcon", true};
+    BoolSetting showYoutubePlatformIcon = {
+        "/appearance/badges/youtubePlatformIcon", true};
     QSizeSetting lastPopupSize = {
         "/appearance/lastPopup/size",
         {300, 500},

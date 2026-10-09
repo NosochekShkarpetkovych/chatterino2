@@ -1230,6 +1230,25 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     SettingWidget::checkbox("BetterTTV", s.showBadgesBttv)
         ->addKeywords({"bttv"})
         ->addTo(layout);
+    SettingWidget::checkbox("Twitch icon", s.showTwitchPlatformIcon)
+        ->addKeywords({"platform", "logo"})
+        ->setTooltip("Small Twitch logo before every Twitch message")
+        ->addTo(layout);
+    SettingWidget::checkbox("YouTube icon", s.showYoutubePlatformIcon)
+        ->addKeywords({"platform", "logo", "yt"})
+        ->setTooltip(
+            "Small YouTube logo before every message from the yt-chat plugin")
+        ->addTo(layout);
+    s.showTwitchPlatformIcon.connect(
+        []() {
+            getApp()->getWindows()->forceLayoutChannelViews();
+        },
+        false);
+    s.showYoutubePlatformIcon.connect(
+        []() {
+            getApp()->getWindows()->forceLayoutChannelViews();
+        },
+        false);
     layout.addSeparator();
     SettingWidget::checkbox("Use custom FrankerFaceZ moderator badges",
                             s.useCustomFfzModeratorBadges)

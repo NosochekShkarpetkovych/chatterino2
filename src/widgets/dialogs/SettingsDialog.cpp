@@ -53,7 +53,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     this->setWindowFlags(this->windowFlags() &
                          ~Qt::WindowContextHelpButtonHint);
 
-    this->resize(915, 600);
+    this->resize(1007, 636);
 
     this->initUi();
     this->addTabs();
