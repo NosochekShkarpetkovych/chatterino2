@@ -2465,6 +2465,41 @@ void ChannelView::handleMouseClick(QMouseEvent *event,
 
             this->elementClicked.invoke(hoveredElement, event->modifiers());
 
+            // yt-chat: left click on a YouTube nickname opens the usercard
+            if (this->context_ == Context::None && this->split_ != nullptr &&
+                layout->getMessage()->id.startsWith("yt-chat-"))
+            {
+                const auto &ytLink = hoveredElement->getLink();
+                if (ytLink.type == Link::InsertText &&
+                    ytLink.value.startsWith("/yt ") &&
+                    !layout->getMessage()->loginName.isEmpty())
+                {
+                    const auto &ytMessage = layout->getMessage();
+
+                    // The plugin puts the link to the avatar into
+                    // localized_name, as "yt-avatar:<url>"
+                    const QString avatarPrefix = "yt-avatar:";
+                    QString avatarUrl;
+                    if (ytMessage->localizedName.startsWith(avatarPrefix))
+                    {
+                        avatarUrl =
+                            ytMessage->localizedName.mid(avatarPrefix.size());
+                    }
+
+                    auto *ytPopup = new UserInfoPopup(
+                        getSettings()->autoCloseUserPopup, this->split_);
+                    ytPopup->setYoutubeData(
+                        ytMessage->displayName, ytMessage->loginName,
+                        avatarUrl, this->effectiveSourceChannel());
+
+                    QPoint offset(ytPopup->width() / 3, ytPopup->height() / 5);
+                    ytPopup->moveTo(QCursor::pos() - offset,
+                                    widgets::BoundsChecking::CursorPosition);
+                    ytPopup->show();
+                    return;
+                }
+            }
+
             const auto &link = hoveredElement->getLink();
             if (!getSettings()->linksDoubleClickOnly)
             {

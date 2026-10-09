@@ -207,11 +207,11 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
              // these can't have /timeout/ buttons because they are not timeouts
              if (target == "ban")
              {
-                 msg = QString("/ban %1").arg(this->userName_);
+                 msg = this->banCommand();
              }
              else if (target == "unban")
              {
-                 msg = QString("/unban %1").arg(this->userName_);
+                 msg = this->unbanCommand();
              }
              else
              {
@@ -240,9 +240,8 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
                               static_cast<int>(timeoutButtons.size()) - 1);
                  }
                  const auto &button = timeoutButtons.at(buttonNum - 1);
-                 msg = QString("/timeout %1 %2")
-                           .arg(this->userName_)
-                           .arg(calculateTimeoutDuration(button));
+                 msg = this->timeoutCommand(
+                     calculateTimeoutDuration(button));
              }
 
              msg = getApp()->getCommands()->execCommand(
@@ -286,6 +285,13 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
                 switch (button)
                 {
                     case Qt::LeftButton: {
+                        if (this->isYoutube_)
+                        {
+                            QDesktopServices::openUrl(
+                                QUrl("https://www.youtube.com/channel/" +
+                                     this->userName_));
+                            break;
+                        }
                         QDesktopServices::openUrl(
                             QUrl("https://www.twitch.tv/" +
                                  this->userName_.toLower()));
@@ -312,6 +318,14 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
                         menu->addAction("Copy avatar link", [avatarUrl] {
                             crossPlatformCopy(avatarUrl);
                         });
+
+                        if (this->isYoutube_)
+                        {
+                            // the rest of the entries are Twitch channels
+                            menu->popup(QCursor::pos());
+                            menu->raise();
+                            return;
+                        }
 
                         // we need to assign login name for msvc compilation
                         auto loginName = this->userName_.toLower();
@@ -442,6 +456,12 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
         user->addStretch(1);
 
         QObject::connect(usercard.getElement(), &Button::leftClicked, [this] {
+            if (this->isYoutube_)
+            {
+                QDesktopServices::openUrl(
+                    QUrl("https://www.youtube.com/channel/" + this->userName_));
+                return;
+            }
             QDesktopServices::openUrl("https://www.twitch.tv/popout/" +
                                       this->underlyingChannel_->getName() +
                                       "/viewercard/" + this->userName_);
@@ -494,6 +514,11 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
                 visibilityModButtons =
                     twitchChannel->isBroadcaster() && !isMyself;
             }
+            if (this->isYoutube_)
+            {
+                // /mod and /vip do not exist for YouTube
+                visibilityModButtons = false;
+            }
             mod->setVisible(visibilityModButtons);
             unmod->setVisible(visibilityModButtons);
             vip->setVisible(visibilityModButtons);
@@ -517,6 +542,14 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
         // we only connect once
         std::ignore =
             this->userStateChanged_.connect([this, lineMod, timeout]() mutable {
+                if (this->isYoutube_)
+                {
+                    // the plugin reports an error itself if there are no rights
+                    lineMod->setVisible(true);
+                    timeout->setVisible(true);
+                    return;
+                }
+
                 TwitchChannel *twitchChannel = dynamic_cast<TwitchChannel *>(
                     this->underlyingChannel_.get());
 
@@ -546,38 +579,15 @@ UserInfoPopup::UserInfoPopup(bool closeAutomatically, Split *split)
             switch (action)
             {
                 case TimeoutWidget::Ban: {
-                    if (this->underlyingChannel_)
-                    {
-                        QString value = "/ban " + this->userName_;
-                        value = getApp()->getCommands()->execCommand(
-                            value, this->underlyingChannel_, false);
-
-                        this->underlyingChannel_->sendMessage(value);
-                    }
+                    this->runModCommand(this->banCommand());
                 }
                 break;
                 case TimeoutWidget::Unban: {
-                    if (this->underlyingChannel_)
-                    {
-                        QString value = "/unban " + this->userName_;
-                        value = getApp()->getCommands()->execCommand(
-                            value, this->underlyingChannel_, false);
-
-                        this->underlyingChannel_->sendMessage(value);
-                    }
+                    this->runModCommand(this->unbanCommand());
                 }
                 break;
                 case TimeoutWidget::Timeout: {
-                    if (this->underlyingChannel_)
-                    {
-                        QString value = "/timeout " + this->userName_ + " " +
-                                        QString::number(arg);
-
-                        value = getApp()->getCommands()->execCommand(
-                            value, this->underlyingChannel_, false);
-
-                        this->underlyingChannel_->sendMessage(value);
-                    }
+                    this->runModCommand(this->timeoutCommand(arg));
                 }
                 break;
             }
@@ -866,6 +876,92 @@ void UserInfoPopup::setData(const QString &name,
         // not a normal twitch channel, the url opened by the button will be invalid, so hide the button
         this->ui_.usercardLabel->hide();
     }
+}
+
+void UserInfoPopup::setYoutubeData(const QString &displayName,
+                                   const QString &channelId,
+                                   const QString &avatarUrl,
+                                   const ChannelPtr &channel)
+{
+    this->isYoutube_ = true;
+
+    // The login name of the plugin's messages is the YouTube channel id.
+    // It is used to find the user's messages and in the /yt-* commands.
+    this->userName_ = channelId;
+    this->userId_ = channelId;
+    this->avatarUrl_ = avatarUrl;
+    this->channel_ = channel;
+    this->underlyingChannel_ = channel;
+
+    this->setWindowTitle(displayName % u"'s Usercard - YouTube");
+
+    this->ui_.nameLabel->setText(displayName);
+    this->ui_.nameLabel->setProperty("copy-text", displayName);
+    this->ui_.userIDLabel->setText(TEXT_USER_ID % channelId);
+    this->ui_.userIDLabel->setProperty("copy-text", channelId);
+
+    // Things that exist only on Twitch
+    if (this->ui_.pronounsLabel != nullptr)
+    {
+        this->ui_.pronounsLabel->setVisible(false);
+    }
+    this->ui_.followerCountLabel->setVisible(false);
+    this->ui_.createdDateLabel->setVisible(false);
+    this->ui_.followageLabel->setVisible(false);
+    this->ui_.subageLabel->setVisible(false);
+    this->ui_.liveIndicator->hide();
+    this->ui_.block->setVisible(false);
+    this->ui_.ignoreHighlights->setVisible(false);
+    this->ui_.notesAdd->setVisible(false);
+
+    // This button opens the channel on YouTube
+    this->ui_.usercardLabel->setText("Open channel");
+
+    if (!avatarUrl.isEmpty())
+    {
+        if (getApp()->getStreamerMode()->isEnabled() &&
+            getSettings()->streamerModeHideUsercardAvatars)
+        {
+            this->ui_.avatarButton->setPixmap(getResources().streamerMode);
+        }
+        else
+        {
+            this->loadAvatar(avatarUrl);
+        }
+    }
+
+    this->userStateChanged_.invoke();
+    this->updateLatestMessages();
+}
+
+QString UserInfoPopup::banCommand() const
+{
+    return (this->isYoutube_ ? u"/yt-ban "_s : u"/ban "_s) + this->userName_;
+}
+
+QString UserInfoPopup::unbanCommand() const
+{
+    return (this->isYoutube_ ? u"/yt-unban "_s : u"/unban "_s) +
+           this->userName_;
+}
+
+QString UserInfoPopup::timeoutCommand(int seconds) const
+{
+    return (this->isYoutube_ ? u"/yt-timeout "_s : u"/timeout "_s) +
+           this->userName_ + u" "_s + QString::number(seconds);
+}
+
+void UserInfoPopup::runModCommand(const QString &command)
+{
+    if (!this->underlyingChannel_)
+    {
+        return;
+    }
+
+    QString value = getApp()->getCommands()->execCommand(
+        command, this->underlyingChannel_, false);
+
+    this->underlyingChannel_->sendMessage(value);
 }
 
 void UserInfoPopup::updateLatestMessages()

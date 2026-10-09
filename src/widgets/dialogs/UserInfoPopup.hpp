@@ -40,6 +40,17 @@ public:
     void setData(const QString &name, const ChannelPtr &contextChannel,
                  const ChannelPtr &openingChannel);
 
+    /**
+     * Usercard of a YouTube chat user (yt-chat plugin).
+     *
+     * @param displayName Name shown in the card
+     * @param channelId YouTube channel id of the user (the login name of the plugin's messages)
+     * @param avatarUrl Link to the avatar, can be empty
+     * @param channel The split's channel, the commands are executed in it
+     */
+    void setYoutubeData(const QString &displayName, const QString &channelId,
+                        const QString &avatarUrl, const ChannelPtr &channel);
+
 protected:
     void themeChangedEvent() override;
     void scaleChangedEvent(float scale) override;
@@ -52,6 +63,15 @@ private:
     void updateNotes();
 
     void loadAvatar(const QUrl &url);
+
+    // Commands for the buttons of the card. Twitch or yt-chat plugin ones.
+    QString banCommand() const;
+    QString unbanCommand() const;
+    QString timeoutCommand(int seconds) const;
+    void runModCommand(const QString &command);
+
+    /// true when the card shows a YouTube user (see setYoutubeData)
+    bool isYoutube_{};
     bool isMod_{};
     bool isBroadcaster_{};
 
