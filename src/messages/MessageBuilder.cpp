@@ -2788,7 +2788,7 @@ HighlightAlert MessageBuilder::applyHighlights(Message &message,
         return {};
     }
 
-    std::vector<Badge> badges;
+    std::vector<TwitchBadge> badges;
     auto [highlighted, highlightResult] = getApp()->getHighlights()->check(
         MessageParseArgs{}, badges, senderName, messageText, message.flags);
 
