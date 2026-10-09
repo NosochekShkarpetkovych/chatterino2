@@ -1728,6 +1728,22 @@ void GeneralPage::initLayout(GeneralPageView &layout)
             "shared chat badge")
         ->addTo(layout);
 
+    layout.addSubtitle("Moderate menu (right click on a message)");
+
+    SettingWidget::checkbox("Show \"Delete message\"", s.modMenuDelete)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Pin\" / \"Unpin\" (Twitch only)",
+                            s.modMenuPin)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Timeout\" / \"Untimeout\"",
+                            s.modMenuTimeout)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Ban\" / \"Unban\"", s.modMenuBan)
+        ->addTo(layout);
+
     layout.addStretch();
 
     // invisible element for width

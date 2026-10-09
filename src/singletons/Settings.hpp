@@ -343,6 +343,13 @@ public:
     /// Behaviour
     BoolSetting alwaysShowPinnedMessage = {"/behaviour/alwaysShowPinnedMessage",
                                            false};
+
+    /// Buttons in the "Moderate" submenu of the message context menu
+    BoolSetting modMenuDelete = {"/behaviour/modMenu/delete", true};
+    BoolSetting modMenuPin = {"/behaviour/modMenu/pin", true};
+    BoolSetting modMenuTimeout = {"/behaviour/modMenu/timeout", true};
+    BoolSetting modMenuBan = {"/behaviour/modMenu/ban", true};
+
     BoolSetting allowDuplicateMessages = {"/behaviour/allowDuplicateMessages",
                                           true};
     BoolSetting mentionUsersWithAt = {"/behaviour/mentionUsersWithAt", false};

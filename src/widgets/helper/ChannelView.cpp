@@ -2819,62 +2819,186 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
     auto chan = this->effectiveSourceChannel();
     auto *twitchChannel = dynamic_cast<TwitchChannel *>(chan.get());
 
+    // Which buttons the user wants to see (Settings -> General)
+    const bool showDelete = getSettings()->modMenuDelete.getValue();
+    const bool showPin = getSettings()->modMenuPin.getValue();
+    const bool showTimeout = getSettings()->modMenuTimeout.getValue();
+    const bool showBan = getSettings()->modMenuBan.getValue();
+
+    // Runs a slash command in the split (Twitch and yt-chat plugin commands)
+    auto runCommand = [chan](const QString &command) {
+        if (!chan)
+        {
+            return;
+        }
+        QString value =
+            getApp()->getCommands()->execCommand(command, chan, false);
+        if (!value.isEmpty())
+        {
+            chan->sendMessage(value);
+        }
+    };
+
+    // "Timeout >" and "Ban >" submenus, the same for Twitch and YouTube.
+    // Only the commands differ.
+    auto addSanctionMenus = [&](QMenu *parent, const QString &timeoutPrefix,
+                                const QString &untimeoutCommand,
+                                const QString &banCommand,
+                                const QString &unbanCommand) {
+        if (showTimeout)
+        {
+            auto *timeoutAction = parent->addAction("&Timeout");
+            auto *timeoutMenu = new QMenu(parent);
+            timeoutAction->setMenu(timeoutMenu);
+
+            const std::pair<int, QString> options[] = {
+                {1, "1 second"},
+                {5, "5 seconds"},
+                {10, "10 seconds"},
+                {300, "300 seconds (5 min)"},
+                {600, "600 seconds (10 min)"},
+            };
+            for (const auto &option : options)
+            {
+                timeoutMenu->addAction(
+                    option.second,
+                    [runCommand,
+                     cmd = timeoutPrefix + QString::number(option.first)] {
+                        runCommand(cmd);
+                    });
+            }
+            timeoutMenu->addSeparator();
+            timeoutMenu->addAction("&Untimeout",
+                                   [runCommand, untimeoutCommand] {
+                                       runCommand(untimeoutCommand);
+                                   });
+        }
+
+        if (showBan)
+        {
+            auto *banAction = parent->addAction("&Ban");
+            auto *banMenu = new QMenu(parent);
+            banAction->setMenu(banMenu);
+            banMenu->addAction("&Ban", [runCommand, banCommand] {
+                runCommand(banCommand);
+            });
+            banMenu->addAction("&Unban", [runCommand, unbanCommand] {
+                runCommand(unbanCommand);
+            });
+        }
+    };
+
     // Messages from the yt-chat plugin have ids starting with "yt-chat-".
     const bool isYoutube = layout->getMessage()->id.startsWith("yt-chat-");
     if (isYoutube && chan)
     {
-        menu->addSeparator();
-        auto *ytModerateAction = menu->addAction("Mo&derate");
         auto *ytModerateMenu = new QMenu(menu);
-        ytModerateAction->setMenu(ytModerateMenu);
-        ytModerateMenu->addAction(
-            "&Delete message", [chan, id = layout->getMessage()->id] {
-                // The plugin's /del deletes the message on YouTube
-                QString value = getApp()->getCommands()->execCommand(
-                    "/del " + id, chan, false);
-                if (!value.isEmpty())
-                {
-                    chan->sendMessage(value);
-                }
-            });
+
+        if (showDelete)
+        {
+            ytModerateMenu->addAction(
+                "&Delete message",
+                [runCommand, id = layout->getMessage()->id] {
+                    // The plugin's /del deletes the message on YouTube
+                    runCommand("/del " + id);
+                });
+        }
+
+        // For YouTube messages login_name is the author's YouTube channel id
+        const QString ytUser = layout->getMessage()->loginName;
+        if (!ytUser.isEmpty())
+        {
+            addSanctionMenus(ytModerateMenu, "/yt-timeout " + ytUser + " ",
+                             "/yt-unban " + ytUser, "/yt-ban " + ytUser,
+                             "/yt-unban " + ytUser);
+        }
+
+        if (ytModerateMenu->isEmpty())
+        {
+            delete ytModerateMenu;
+        }
+        else
+        {
+            menu->addSeparator();
+            auto *ytModerateAction = menu->addAction("Mo&derate");
+            ytModerateAction->setMenu(ytModerateMenu);
+        }
     }
 
     if (!isYoutube && !layout->getMessage()->id.isEmpty() && twitchChannel &&
         twitchChannel->hasModRights())
     {
-        menu->addSeparator();
-        auto *moderateAction = menu->addAction("Mo&derate");
         auto *moderateMenu = new QMenu(menu);
-        moderateAction->setMenu(moderateMenu);
-        moderateMenu->addAction(
-            "&Delete message", [twitchChannel, id = layout->getMessage()->id] {
-                twitchChannel->deleteMessagesAs(
-                    id, getApp()->getAccounts()->twitch.getCurrent().get());
-            });
 
-        auto *pinAction = moderateMenu->addAction("&Pin");
-        auto *pinMenu = new QMenu(moderateMenu);
-        pinAction->setMenu(pinMenu);
-        auto pinFor = [&](std::optional<std::chrono::seconds> dur) {
-            return [twitchChannel, id = layout->getMessage()->id, dur,
-                    text = layout->getMessage()->messageText] {
-                twitchChannel->pinMessageAs(
-                    id, dur, *getApp()->getAccounts()->twitch.getCurrent(),
-                    text);
+        if (showDelete)
+        {
+            moderateMenu->addAction(
+                "&Delete message",
+                [twitchChannel, id = layout->getMessage()->id] {
+                    twitchChannel->deleteMessagesAs(
+                        id,
+                        getApp()->getAccounts()->twitch.getCurrent().get());
+                });
+        }
+
+        if (showPin)
+        {
+            auto *pinAction = moderateMenu->addAction("&Pin");
+            auto *pinMenu = new QMenu(moderateMenu);
+            pinAction->setMenu(pinMenu);
+            auto pinFor = [&](std::optional<std::chrono::seconds> dur) {
+                return [twitchChannel, id = layout->getMessage()->id, dur,
+                        text = layout->getMessage()->messageText] {
+                    twitchChannel->pinMessageAs(
+                        id, dur, *getApp()->getAccounts()->twitch.getCurrent(),
+                        text);
+                };
             };
-        };
-        pinMenu->addAction("&Until stream ends", this, pinFor(std::nullopt));
-        pinMenu->addAction("&1 minute", this, pinFor(std::chrono::minutes(1)));
-        pinMenu->addAction("10 minutes", this,
-                           pinFor(std::chrono::minutes(10)));
-        pinMenu->addAction("&30 minutes", this,
-                           pinFor(std::chrono::minutes(30)));
+            pinMenu->addAction("Until &stream ends", this,
+                               pinFor(std::nullopt));
+            pinMenu->addAction("&1 minute", this,
+                               pinFor(std::chrono::minutes(1)));
+            pinMenu->addAction("10 minutes", this,
+                               pinFor(std::chrono::minutes(10)));
+            pinMenu->addAction("&30 minutes", this,
+                               pinFor(std::chrono::minutes(30)));
 
-        moderateMenu->addAction(
-            "&Unpin", this, [twitchChannel, id = layout->getMessage()->id] {
-                twitchChannel->unpinMessageAs(
-                    id, *getApp()->getAccounts()->twitch.getCurrent());
-            });
+            pinMenu->addSeparator();
+
+            // Unpins the message that is pinned right now, no matter which
+            // message was right clicked.
+            pinMenu->addAction(
+                "&Unpin", this,
+                [twitchChannel, id = layout->getMessage()->id] {
+                    if (twitchChannel->getPinnedMessage() != nullptr)
+                    {
+                        twitchChannel->unpinCurrentMessage();
+                        return;
+                    }
+                    // Pinned message is not known: try the clicked one
+                    twitchChannel->unpinMessageAs(
+                        id, *getApp()->getAccounts()->twitch.getCurrent());
+                });
+        }
+
+        const QString twitchUser = layout->getMessage()->loginName;
+        if (!twitchUser.isEmpty())
+        {
+            addSanctionMenus(moderateMenu, "/timeout " + twitchUser + " ",
+                             "/untimeout " + twitchUser, "/ban " + twitchUser,
+                             "/unban " + twitchUser);
+        }
+
+        if (moderateMenu->isEmpty())
+        {
+            delete moderateMenu;
+        }
+        else
+        {
+            menu->addSeparator();
+            auto *moderateAction = menu->addAction("Mo&derate");
+            moderateAction->setMenu(moderateMenu);
+        }
     }
 
     bool isSearch = this->context_ == Context::Search;
