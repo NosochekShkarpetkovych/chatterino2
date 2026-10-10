@@ -53,7 +53,20 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     this->setWindowFlags(this->windowFlags() &
                          ~Qt::WindowContextHelpButtonHint);
 
-    this->resize(1007, 636);
+    {
+        // Restore the size and position from the last time
+        const auto &st = *getSettings();
+        const int w = st.settingsDialogWidth.getValue();
+        const int h = st.settingsDialogHeight.getValue();
+        this->resize(w >= 400 ? w : 1007, h >= 300 ? h : 636);
+
+        const int x = st.settingsDialogX.getValue();
+        const int y = st.settingsDialogY.getValue();
+        if (x > -100000 && y > -100000)
+        {
+            this->move(x, y);
+        }
+    }
 
     this->initUi();
     this->addTabs();
@@ -426,6 +439,18 @@ void SettingsDialog::showEvent(QShowEvent *e)
 {
     this->ui_.search->setText("");
     BaseWindow::showEvent(e);
+}
+
+void SettingsDialog::closeEvent(QCloseEvent *event)
+{
+    auto &st = *getSettings();
+    st.settingsDialogWidth.setValue(this->width());
+    st.settingsDialogHeight.setValue(this->height());
+    st.settingsDialogX.setValue(this->x());
+    st.settingsDialogY.setValue(this->y());
+    st.requestSave();
+
+    BaseWindow::closeEvent(event);
 }
 
 ///// Widget creation helpers

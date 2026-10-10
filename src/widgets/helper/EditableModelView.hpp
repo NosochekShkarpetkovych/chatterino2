@@ -13,6 +13,7 @@
 class QAbstractTableModel;
 class QTableView;
 class QHBoxLayout;
+class QTimer;
 
 namespace chatterino {
 
@@ -42,6 +43,14 @@ private:
     QHBoxLayout *buttons_{};
 
     void moveRow(int dir);
+
+    /// Lets the user resize and reorder the columns, and remembers it
+    void setupHeader();
+    void fitHeaderTexts();
+    void saveHeaderState();
+    QString headerStateKey() const;
+
+    QTimer *saveTimer_{};
 };
 
 }  // namespace chatterino

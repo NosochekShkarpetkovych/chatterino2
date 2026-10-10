@@ -1765,6 +1765,17 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     SettingWidget::checkbox("Show \"Go to message\"", s.msgMenuGoTo)
         ->addTo(layout);
 
+    layout.addSubtitle("Main window");
+
+    SettingWidget::checkbox("Hide the update button (restart required)",
+                            s.hideUpdateButton)
+        ->addTo(layout);
+
+    SettingWidget::lineEdit("Window title", s.customWindowTitle,
+                            Version::instance().fullVersion())
+        ->setTooltip("Leave empty to use the default title")
+        ->addTo(layout);
+
     layout.addStretch();
 
     // invisible element for width

@@ -110,6 +110,13 @@ Window::Window(WindowType type, QWidget *parent)
             },
             this->signalHolder_);
     }
+
+    // Apply a changed custom window title right away
+    getSettings()->customWindowTitle.connect(
+        [this](const QString & /*title*/) {
+            this->onAccountSelected();
+        },
+        this->signalHolder_, false);
 }
 
 WindowType Window::getType()
@@ -234,7 +241,15 @@ void Window::addCustomTitlebarButtons()
     // updates
     auto *update = this->addTitleBarButton<PixmapButton>([] {});
 
-    initUpdateButton(*update, [] {}, this->signalHolder_);
+    if (getSettings()->hideUpdateButton.getValue())
+    {
+        // The button stays hidden (takes effect after a restart)
+        update->hide();
+    }
+    else
+    {
+        initUpdateButton(*update, [] {}, this->signalHolder_);
+    }
 
     // account
     this->userLabel_ = this->addTitleBarLabel([this] {
@@ -807,6 +822,13 @@ void Window::onAccountSelected()
 
     // update title (also append username on Linux and MacOS)
     QString windowTitle = Version::instance().fullVersion();
+
+    const QString customTitle =
+        getSettings()->customWindowTitle.getValue().trimmed();
+    if (!customTitle.isEmpty())
+    {
+        windowTitle = customTitle;
+    }
 
 #if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
     if (user->isAnon())

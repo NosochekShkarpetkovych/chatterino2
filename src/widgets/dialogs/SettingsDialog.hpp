@@ -50,6 +50,7 @@ public:
 protected:
     void scaleChangedEvent(float newDpi) override;
     void showEvent(QShowEvent *) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     void refresh();

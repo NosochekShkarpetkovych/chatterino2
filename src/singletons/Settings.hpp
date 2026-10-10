@@ -358,6 +358,16 @@ public:
     BoolSetting msgMenuViewThread = {"/behaviour/msgMenu/viewThread", true};
     BoolSetting msgMenuGoTo = {"/behaviour/msgMenu/goTo", true};
 
+    /// Main window: hide the update button, custom window title (empty = default)
+    BoolSetting hideUpdateButton = {"/appearance/hideUpdateButton", false};
+    QStringSetting customWindowTitle = {"/appearance/customWindowTitle", ""};
+
+    /// Size and position of the settings window (x/y -100000 = not saved yet)
+    IntSetting settingsDialogWidth = {"/ui/settingsDialog/width", 1007};
+    IntSetting settingsDialogHeight = {"/ui/settingsDialog/height", 636};
+    IntSetting settingsDialogX = {"/ui/settingsDialog/x", -100000};
+    IntSetting settingsDialogY = {"/ui/settingsDialog/y", -100000};
+
     BoolSetting allowDuplicateMessages = {"/behaviour/allowDuplicateMessages",
                                           true};
     BoolSetting mentionUsersWithAt = {"/behaviour/mentionUsersWithAt", false};

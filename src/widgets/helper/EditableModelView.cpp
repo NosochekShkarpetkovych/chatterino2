@@ -4,6 +4,7 @@
 
 #include "widgets/helper/EditableModelView.hpp"
 
+#include "singletons/Settings.hpp"
 #include "widgets/helper/RegExpItemDelegate.hpp"
 #include "widgets/helper/TableStyles.hpp"
 
@@ -15,7 +16,10 @@
 #include <QModelIndex>
 #include <QPushButton>
 #include <QTableView>
+#include <QTimer>
 #include <QVBoxLayout>
+
+#include <typeinfo>
 
 namespace chatterino {
 
@@ -110,6 +114,96 @@ EditableModelView::EditableModelView(QAbstractTableModel *model, bool movable)
 
     // finish button layout
     buttons->addStretch(1);
+
+    // Pages set up their columns right after creating the view, so the header
+    // is adjusted a little later.
+    this->saveTimer_ = new QTimer(this);
+    this->saveTimer_->setSingleShot(true);
+    this->saveTimer_->setInterval(600);
+    QObject::connect(this->saveTimer_, &QTimer::timeout, this, [this] {
+        this->saveHeaderState();
+    });
+    QTimer::singleShot(100, this, [this] {
+        this->setupHeader();
+    });
+}
+
+QString EditableModelView::headerStateKey() const
+{
+    QString type = QString::fromLatin1(typeid(*this->model_).name());
+    for (auto &c : type)
+    {
+        if (!c.isLetterOrNumber())
+        {
+            c = '_';
+        }
+    }
+    return QStringLiteral("/ui/tableState/%1_%2")
+        .arg(type)
+        .arg(this->model_->columnCount());
+}
+
+void EditableModelView::fitHeaderTexts()
+{
+    auto *header = this->tableView_->horizontalHeader();
+    for (int i = 0; i < header->count(); i++)
+    {
+        if (header->isSectionHidden(i) ||
+            header->sectionResizeMode(i) == QHeaderView::Stretch)
+        {
+            continue;
+        }
+
+        // The header text must always fit into its column
+        const int wanted = header->sectionSizeHint(i) + 12;
+        if (header->sectionSize(i) < wanted)
+        {
+            header->resizeSection(i, wanted);
+        }
+    }
+}
+
+void EditableModelView::setupHeader()
+{
+    auto *header = this->tableView_->horizontalHeader();
+
+    header->setSectionsMovable(true);
+    for (int i = 0; i < header->count(); i++)
+    {
+        if (header->sectionResizeMode(i) == QHeaderView::Fixed)
+        {
+            header->setSectionResizeMode(i, QHeaderView::Interactive);
+        }
+    }
+
+    this->fitHeaderTexts();
+
+    pajlada::Settings::Setting<QString> state(
+        this->headerStateKey().toStdString(), QString());
+    const QString saved = state.getValue();
+    if (!saved.isEmpty())
+    {
+        header->restoreState(QByteArray::fromBase64(saved.toLatin1()));
+        this->fitHeaderTexts();
+    }
+
+    QObject::connect(header, &QHeaderView::sectionResized, this, [this] {
+        this->saveTimer_->start();
+    });
+    QObject::connect(header, &QHeaderView::sectionMoved, this, [this] {
+        this->saveTimer_->start();
+    });
+}
+
+void EditableModelView::saveHeaderState()
+{
+    const auto data =
+        this->tableView_->horizontalHeader()->saveState().toBase64();
+
+    pajlada::Settings::Setting<QString> state(
+        this->headerStateKey().toStdString(), QString());
+    state.setValue(QString::fromLatin1(data));
+    getSettings()->requestSave();
 }
 void EditableModelView::setValidationRegexp(QRegularExpression regexp)
 {
