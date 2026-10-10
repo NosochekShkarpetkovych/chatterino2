@@ -2822,6 +2822,28 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
         }
     }
 
+    // Hide the items that are turned off in Settings -> General
+    {
+        const auto &st = *getSettings();
+        const auto actions = menu->actions();
+        for (auto *action : actions)
+        {
+            const QString text = action->text();
+            const bool hide =
+                (text == "Copy &message" && !st.msgMenuCopy.getValue()) ||
+                (text == "Copy &full message" && !st.msgMenuCopyFull.getValue()) ||
+                (text == "&Reply to message" && !st.msgMenuReply.getValue()) ||
+                (text == "Reply to &original thread" &&
+                 !st.msgMenuReplyThread.getValue()) ||
+                (text == "View &thread" && !st.msgMenuViewThread.getValue());
+            if (hide)
+            {
+                menu->removeAction(action);
+                action->deleteLater();
+            }
+        }
+    }
+
     // Add search action when text is selected and search feature is enabled
     if (!this->selection_.isEmpty() && getSettings()->searchEnabled.getValue())
     {
@@ -3047,7 +3069,8 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
     bool isMentions =
         this->channel()->getType() == Channel::Type::TwitchMentions;
     bool isAutomod = this->channel()->getType() == Channel::Type::TwitchAutomod;
-    if (isSearch || isMentions || isReplyOrUserCard || isAutomod)
+    if ((isSearch || isMentions || isReplyOrUserCard || isAutomod) &&
+        getSettings()->msgMenuGoTo.getValue())
     {
         const auto &messagePtr = layout->getMessagePtr();
         menu->addAction("&Go to message", [this, &messagePtr, isSearch,

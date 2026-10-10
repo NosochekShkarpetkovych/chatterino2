@@ -1744,6 +1744,27 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     SettingWidget::checkbox("Show \"Ban\" / \"Unban\"", s.modMenuBan)
         ->addTo(layout);
 
+    layout.addSubtitle("Message menu (right click on a message)");
+
+    SettingWidget::checkbox("Show \"Copy message\"", s.msgMenuCopy)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Copy full message\"", s.msgMenuCopyFull)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Reply to message\"", s.msgMenuReply)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Reply to original thread\"",
+                            s.msgMenuReplyThread)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"View thread\"", s.msgMenuViewThread)
+        ->addTo(layout);
+
+    SettingWidget::checkbox("Show \"Go to message\"", s.msgMenuGoTo)
+        ->addTo(layout);
+
     layout.addStretch();
 
     // invisible element for width

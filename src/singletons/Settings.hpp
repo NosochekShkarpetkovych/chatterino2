@@ -350,6 +350,14 @@ public:
     BoolSetting modMenuTimeout = {"/behaviour/modMenu/timeout", true};
     BoolSetting modMenuBan = {"/behaviour/modMenu/ban", true};
 
+    /// Items of the message context menu (right click on a message)
+    BoolSetting msgMenuCopy = {"/behaviour/msgMenu/copy", true};
+    BoolSetting msgMenuCopyFull = {"/behaviour/msgMenu/copyFull", true};
+    BoolSetting msgMenuReply = {"/behaviour/msgMenu/reply", true};
+    BoolSetting msgMenuReplyThread = {"/behaviour/msgMenu/replyThread", true};
+    BoolSetting msgMenuViewThread = {"/behaviour/msgMenu/viewThread", true};
+    BoolSetting msgMenuGoTo = {"/behaviour/msgMenu/goTo", true};
+
     BoolSetting allowDuplicateMessages = {"/behaviour/allowDuplicateMessages",
                                           true};
     BoolSetting mentionUsersWithAt = {"/behaviour/mentionUsersWithAt", false};
