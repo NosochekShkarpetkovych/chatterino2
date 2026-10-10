@@ -50,6 +50,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QMetaEnum>
+#include <QPainter>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QPointer>
@@ -897,7 +898,12 @@ void UserInfoPopup::setYoutubeData(const QString &displayName,
 
     this->ui_.nameLabel->setText(displayName);
     this->ui_.nameLabel->setProperty("copy-text", displayName);
-    this->ui_.userIDLabel->setText(TEXT_USER_ID % channelId);
+
+    // The channel id is long: show the beginning, copy the whole id
+    const QString shortId =
+        channelId.size() > 14 ? channelId.left(11) + u"..."_s : channelId;
+    this->ui_.userIDLabel->setText(TEXT_USER_ID % shortId);
+    this->ui_.userIDLabel->setToolTip(channelId);
     this->ui_.userIDLabel->setProperty("copy-text", channelId);
 
     // Things that exist only on Twitch
@@ -905,8 +911,8 @@ void UserInfoPopup::setYoutubeData(const QString &displayName,
     {
         this->ui_.pronounsLabel->setVisible(false);
     }
-    this->ui_.followerCountLabel->setVisible(false);
-    this->ui_.createdDateLabel->setVisible(false);
+    this->ui_.followerCountLabel->setText("Platform: YouTube");
+    this->ui_.createdDateLabel->setText("Messages in this chat: ...");
     this->ui_.followageLabel->setVisible(false);
     this->ui_.subageLabel->setVisible(false);
     this->ui_.liveIndicator->hide();
@@ -917,7 +923,52 @@ void UserInfoPopup::setYoutubeData(const QString &displayName,
     // This button opens the channel on YouTube
     this->ui_.usercardLabel->setText("Open channel");
 
-    if (!avatarUrl.isEmpty())
+    // The clicked message can be an old one (restored from the history)
+    // without the avatar: look for the newest message of this user that has it
+    QString avatar = avatarUrl;
+    if (avatar.isEmpty() && channel)
+    {
+        const QString avatarPrefix = "yt-avatar:";
+        const auto snapshot = channel->getMessageSnapshot();
+        for (auto it = snapshot.rbegin(); it != snapshot.rend(); ++it)
+        {
+            const auto &candidate = *it;
+            if (candidate->loginName == channelId &&
+                candidate->localizedName.startsWith(avatarPrefix))
+            {
+                avatar = candidate->localizedName.mid(avatarPrefix.size());
+                break;
+            }
+        }
+    }
+    this->avatarUrl_ = avatar;
+
+    // Placeholder: a colored circle with the first letter. It stays if the
+    // avatar is not found or can not be loaded.
+    {
+        QPixmap placeholder(200, 200);
+        placeholder.fill(Qt::transparent);
+
+        QPainter painter(&placeholder);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setBrush(QColor::fromHsv(
+            static_cast<int>(qHash(channelId) % 360U), 140, 150));
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(QRect(0, 0, 200, 200));
+
+        painter.setPen(Qt::white);
+        auto font = painter.font();
+        font.setBold(true);
+        font.setPixelSize(110);
+        painter.setFont(font);
+        painter.drawText(QRect(0, 0, 200, 200), Qt::AlignCenter,
+                         displayName.left(1).toUpper());
+        painter.end();
+
+        this->ui_.avatarButton->setPixmap(placeholder);
+    }
+
+    if (!avatar.isEmpty())
     {
         if (getApp()->getStreamerMode()->isEnabled() &&
             getSettings()->streamerModeHideUsercardAvatars)
@@ -926,12 +977,16 @@ void UserInfoPopup::setYoutubeData(const QString &displayName,
         }
         else
         {
-            this->loadAvatar(avatarUrl);
+            this->loadAvatar(avatar);
         }
     }
 
     this->userStateChanged_.invoke();
     this->updateLatestMessages();
+
+    this->ui_.createdDateLabel->setText(
+        u"Messages in this chat: "_s %
+        QString::number(this->ui_.latestMessages->channel()->countMessages()));
 }
 
 QString UserInfoPopup::banCommand() const
@@ -1296,7 +1351,7 @@ void UserInfoPopup::loadAvatar(const QUrl &url)
             avatar.loadFromData(data);
             this->ui_.avatarButton->setPixmap(avatar);
         }
-        else
+        else if (!this->isYoutube_)
         {
             this->ui_.avatarButton->setPixmap(QPixmap());
         }
