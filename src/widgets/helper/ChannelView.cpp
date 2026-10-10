@@ -2138,6 +2138,35 @@ void ChannelView::mouseMoveEvent(QMouseEvent *event)
                     element->getTooltip(), getTooltipScale(scale)));
             }
         }
+        else if (const auto *imageElement =
+                     dynamic_cast<const ImageElement *>(element))
+        {
+            // yt-chat: plain image elements (YouTube emoji, badges, logo)
+            // get the same enlarged preview as Twitch emotes
+            auto showThumbnailSetting =
+                getSettings()->emotesTooltipPreview.getEnum();
+            bool showThumbnail =
+                showThumbnailSetting == ThumbnailPreviewMode::AlwaysShow ||
+                (showThumbnailSetting == ThumbnailPreviewMode::ShowOnShift &&
+                 event->modifiers() == Qt::ShiftModifier);
+
+            auto image = imageElement->image();
+            float factor =
+                getTooltipScale(getSettings()->emoteTooltipScale.getEnum());
+            // small source images (24px) are enlarged to roughly 64px
+            if (image != nullptr)
+            {
+                int side = std::max(image->width(), image->height());
+                if (side > 0 && side < 64)
+                {
+                    factor *= std::min(64.0F / static_cast<float>(side), 4.0F);
+                }
+            }
+
+            this->tooltipWidget_->setOne(TooltipEntry::scaled(
+                showThumbnail ? image : nullptr, element->getTooltip(),
+                factor));
+        }
         else if (auto *linkElement = dynamic_cast<LinkElement *>(element))
         {
             auto thumbnailSize = getSettings()->thumbnailSize;
@@ -2466,7 +2495,9 @@ void ChannelView::handleMouseClick(QMouseEvent *event,
             this->elementClicked.invoke(hoveredElement, event->modifiers());
 
             // yt-chat: left click on a YouTube nickname opens the usercard
-            if (this->context_ == Context::None && this->split_ != nullptr &&
+            if ((this->context_ == Context::None ||
+                 this->context_ == Context::Search) &&
+                this->split_ != nullptr &&
                 layout->getMessage()->id.startsWith("yt-chat-"))
             {
                 const auto &ytLink = hoveredElement->getLink();
