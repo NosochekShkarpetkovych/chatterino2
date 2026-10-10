@@ -26,6 +26,7 @@
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QTimer>
 
 namespace chatterino {
 
@@ -201,6 +202,10 @@ void SearchPopup::updateWindowTitle()
 void SearchPopup::showEvent(QShowEvent *e)
 {
     this->search();
+    if (this->refreshTimer_ != nullptr)
+    {
+        this->refreshTimer_->start();
+    }
     BaseWindow::showEvent(e);
 }
 
@@ -231,10 +236,70 @@ void SearchPopup::search()
     if (this->snapshot_.size() == 0)
     {
         this->snapshot_ = this->buildSnapshot();
+        this->syncSeen();
     }
 
     this->channelView_->setChannel(filter(this->searchInput_->text(),
                                           this->channelName_, this->snapshot_));
+}
+
+void SearchPopup::syncSeen()
+{
+    this->seen_.clear();
+    for (const auto &message : this->snapshot_)
+    {
+        this->seen_.insert(message.get());
+    }
+}
+
+void SearchPopup::refreshLive()
+{
+    if (this->searchChannels_.isEmpty() || this->snapshot_.empty())
+    {
+        return;
+    }
+
+    auto fresh = this->buildSnapshot();
+
+    std::vector<MessagePtr> added;
+    for (const auto &message : fresh)
+    {
+        if (this->seen_.find(message.get()) == this->seen_.end())
+        {
+            added.push_back(message);
+        }
+    }
+    if (added.empty())
+    {
+        return;
+    }
+
+    auto predicates = parsePredicates(this->searchInput_->text());
+    auto target = this->channelView_->channel();
+
+    for (const auto &message : added)
+    {
+        this->snapshot_.push_back(message);
+        this->seen_.insert(message.get());
+
+        bool accept = true;
+        for (const auto &pred : predicates)
+        {
+            if (!pred->appliesTo(*message))
+            {
+                accept = false;
+                break;
+            }
+        }
+
+        if (accept)
+        {
+            auto overrideFlags = std::optional<MessageFlags>(message->flags);
+            overrideFlags->set(MessageFlag::DoNotLog);
+
+            target->addMessage(message, MessageContext::Repost, overrideFlags);
+        }
+    }
 }
 
 std::vector<MessagePtr> SearchPopup::buildSnapshot()
@@ -333,6 +398,11 @@ void SearchPopup::initLayout()
 
         this->setLayout(layout1);
     }
+
+    this->refreshTimer_ = new QTimer(this);
+    this->refreshTimer_->setInterval(500);
+    QObject::connect(this->refreshTimer_, &QTimer::timeout, this,
+                     &SearchPopup::refreshLive);
 
     this->searchInput_->setFocus();
 }

@@ -8,8 +8,10 @@
 #include "widgets/BasePopup.hpp"
 
 #include <memory>
+#include <unordered_set>
 
 class QLineEdit;
+class QTimer;
 
 namespace chatterino {
 
@@ -42,6 +44,9 @@ private:
     void search();
     void addShortcuts() override;
     std::vector<MessagePtr> buildSnapshot();
+    void syncSeen();
+    /// Adds messages that arrived after the window was opened
+    void refreshLive();
 
     /**
      * @brief Only retains those message from a list of messages that satisfy a
@@ -69,6 +74,8 @@ private:
         const QString &input);
 
     std::vector<MessagePtr> snapshot_;
+    std::unordered_set<const void *> seen_;
+    QTimer *refreshTimer_{};
     QLineEdit *searchInput_{};
     ChannelView *channelView_{};
     QString channelName_{};

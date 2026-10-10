@@ -2731,14 +2731,18 @@ void ChannelView::addMessageContextMenuItems(QMenu *menu,
     });
 
     // Only display reply option where it makes sense
-    if (this->context_ == Context::None &&
-        layout->getMessage()->id.startsWith("yt-chat-"))
+    if (layout->getMessage()->id.startsWith("yt-chat-"))
     {
         // yt-chat: reply to a YouTube message = insert "/yt @nick " into input
+        // (works in the split, the user card and the search window)
         menu->addAction("&Reply to message",
                         [this, name = layout->getMessage()->displayName] {
-                            auto *ytSplit =
-                                dynamic_cast<Split *>(this->parentWidget());
+                            auto *ytSplit = this->split_;
+                            if (ytSplit == nullptr)
+                            {
+                                ytSplit =
+                                    dynamic_cast<Split *>(this->parentWidget());
+                            }
                             if (ytSplit)
                             {
                                 ytSplit->insertTextToInput("/yt @" + name +
@@ -3315,6 +3319,7 @@ bool ChannelView::mayContainMessage(const MessagePtr &message)
         case Channel::Type::TwitchWatching:
             // XXX: system messages may not have the channel set
             return message->flags.has(MessageFlag::System) ||
+                   message->id.startsWith("yt-chat-") ||
                    this->channel()->getName() == message->channelName;
         case Channel::Type::TwitchWhispers:
             return message->flags.has(MessageFlag::Whisper);
@@ -3440,6 +3445,15 @@ void ChannelView::handleLinkClick(QMouseEvent *event, const Link &link,
         }
         break;
         case Link::ReplyToMessage: {
+            if (layout->getMessage()->id.startsWith("yt-chat-"))
+            {
+                if (this->split_ != nullptr)
+                {
+                    this->split_->insertTextToInput(
+                        "/yt @" + layout->getMessage()->displayName + " ");
+                }
+                return;
+            }
             if (layout->getMessagePtr()->isReplyable() !=
                 Message::ReplyStatus::NotReplyable)
             {
