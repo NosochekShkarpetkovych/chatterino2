@@ -28,6 +28,7 @@
 #include "widgets/settingspages/NicknamesPage.hpp"
 #include "widgets/settingspages/NotificationPage.hpp"
 #include "widgets/settingspages/PluginsPage.hpp"
+#include "widgets/settingspages/YouTubePage.hpp"
 
 #include <QDialogButtonBox>
 #include <QLineEdit>
@@ -270,6 +271,7 @@ void SettingsDialog::addTabs()
     this->addTab([]{return new ExternalToolsPage;},    "External tools", ":/settings/externaltools.svg");
 #ifdef CHATTERINO_HAVE_PLUGINS
     this->addTab([]{return new PluginsPage;},          "Plugins",        ":/settings/plugins.svg");
+    this->addTab([]{return new YouTubePage;},          "YouTube",        ":/settings/plugins.svg");
 #endif
     this->ui_.tabContainer->addStretch(1);
     this->addTab([]{return new AboutPage;},            "About",          ":/settings/about.svg", SettingsTabId::About, Qt::AlignBottom);

@@ -364,6 +364,20 @@ public:
     // UI language: "en" (default) or "uk" (Ukrainian), see common/UiTranslation.hpp
     QStringSetting uiLanguage = {"/appearance/uiLanguage", "en"};
 
+    // yt-chat plugin (Settings -> YouTube). The plugin reads these through
+    // c2.yt_settings(), see controllers/plugins/api/Message.cpp
+    QStringSetting ytBadgeStyle = {"/ytChat/badgeStyle", "youtube"};
+    IntSetting ytInitialMessages = {"/ytChat/initialMessages", 5};
+    BoolSetting ytShowEvents = {"/ytChat/showEvents", true};
+    BoolSetting ytShowLeaderboard = {"/ytChat/showLeaderboard", true};
+    BoolSetting ytEventDecor = {"/ytChat/eventDecor", true};
+    BoolSetting ytLeaderboardDecor = {"/ytChat/leaderboardDecor", true};
+    BoolSetting ytEventsInMentions = {"/ytChat/eventsInMentions", true};
+    QStringSetting ytEventColor = {"/ytChat/eventColor", "#ff0f9d58"};
+    QStringSetting ytLeaderboardColor = {"/ytChat/leaderboardColor",
+                                         "#ccf4b400"};
+    QStringSetting ytUserColors = {"/ytChat/userColors", "[]"};
+
     /// Size and position of the settings window (x/y -100000 = not saved yet)
     IntSetting settingsDialogWidth = {"/ui/settingsDialog/width", 1007};
     IntSetting settingsDialogHeight = {"/ui/settingsDialog/height", 636};

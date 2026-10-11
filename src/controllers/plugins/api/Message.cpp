@@ -10,8 +10,11 @@
 #    include "controllers/plugins/SolTypes.hpp"
 #    include "messages/Message.hpp"
 #    include "messages/MessageElement.hpp"
+#    include "singletons/Settings.hpp"
 
+#    include <QJsonArray>
 #    include <QJsonDocument>
+#    include <QJsonObject>
 #    include <sol/sol.hpp>
 
 namespace {
@@ -586,6 +589,41 @@ struct MessageElements {
 
 void createUserType(sol::table &c2)
 {
+    // c2.yt_settings(): options of the yt-chat plugin (Settings -> YouTube)
+    c2.set_function("yt_settings", [](sol::this_state state) {
+        sol::state_view lua(state);
+        auto *settings = getSettings();
+
+        sol::table tbl = lua.create_table();
+        tbl["badge_style"] = settings->ytBadgeStyle.getValue().toStdString();
+        tbl["initial_messages"] = settings->ytInitialMessages.getValue();
+        tbl["show_events"] = settings->ytShowEvents.getValue();
+        tbl["show_leaderboard"] = settings->ytShowLeaderboard.getValue();
+        tbl["event_decor"] = settings->ytEventDecor.getValue();
+        tbl["leaderboard_decor"] = settings->ytLeaderboardDecor.getValue();
+        tbl["events_in_mentions"] = settings->ytEventsInMentions.getValue();
+        tbl["event_color"] = settings->ytEventColor.getValue().toStdString();
+        tbl["leaderboard_color"] =
+            settings->ytLeaderboardColor.getValue().toStdString();
+
+        sol::table colors = lua.create_table();
+        const auto doc = QJsonDocument::fromJson(
+            settings->ytUserColors.getValue().toUtf8());
+        int index = 1;
+        for (const auto &value : doc.array())
+        {
+            const auto obj = value.toObject();
+            sol::table row = lua.create_table();
+            row["name"] = obj["name"].toString().toStdString();
+            row["color"] = obj["color"].toString().toStdString();
+            row["enabled"] = obj["enabled"].toBool(true);
+            colors[index++] = row;
+        }
+        tbl["user_colors"] = colors;
+
+        return tbl;
+    });
+
     c2.new_usertype<ElementRef>(
         "MessageElement", sol::no_constructor,  //
         "type", sol::property([](const ElementRef &el) {

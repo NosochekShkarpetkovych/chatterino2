@@ -42,6 +42,7 @@
 #include <QSignalBlocker>
 #include <QString>
 #include <QStringList>
+#include <QTabBar>
 #include <QTimer>
 #include <QVariant>
 #include <QWidget>
@@ -465,12 +466,41 @@ inline void translateHeader(QHeaderView *header)
     const auto orientation = header->orientation();
     const int count = orientation == Qt::Horizontal ? model->columnCount()
                                                     : model->rowCount();
+    bool changed = false;
     for (int i = 0; i < count; ++i)
     {
         const QString src =
             model->headerData(i, orientation, Qt::DisplayRole).toString();
         apply(src, false, [&](const QString &out) {
             model->setHeaderData(i, orientation, out, Qt::DisplayRole);
+            changed = true;
+        });
+    }
+
+    // column widths were computed for the English texts: grow where needed
+    if (changed && orientation == Qt::Horizontal)
+    {
+        for (int i = 0; i < count; ++i)
+        {
+            if (header->isSectionHidden(i))
+            {
+                continue;
+            }
+            const int need = header->sectionSizeHint(i);
+            if (header->sectionSize(i) < need)
+            {
+                header->resizeSection(i, need);
+            }
+        }
+    }
+}
+
+inline void translateTabBar(QTabBar *tabs)
+{
+    for (int i = 0; i < tabs->count(); ++i)
+    {
+        apply(tabs->tabText(i), true, [&](const QString &out) {
+            tabs->setTabText(i, out);
         });
     }
 }
@@ -523,6 +553,10 @@ inline void translateWidget(QWidget *w)
     else if (auto *header = dynamic_cast<QHeaderView *>(w))
     {
         translateHeader(header);
+    }
+    else if (auto *tabs = dynamic_cast<QTabBar *>(w))
+    {
+        translateTabBar(tabs);
     }
     else if (auto *menu = dynamic_cast<QMenu *>(w))
     {
