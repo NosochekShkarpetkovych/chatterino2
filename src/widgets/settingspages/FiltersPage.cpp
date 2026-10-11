@@ -12,6 +12,7 @@
 #include "util/LayoutCreator.hpp"
 #include "widgets/dialogs/ChannelFilterEditorDialog.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QHeaderView>
 #include <QMessageBox>
@@ -39,10 +40,7 @@ FiltersPage::FiltersPage()
     this->view_ = view;
 
     view->setTitles({"Name", "Filter", "Valid"});
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        QHeaderView::Interactive);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        1, QHeaderView::Stretch);
+    makeColumnsResizable(view->getTableView(), {1});
 
     QTimer::singleShot(1, [view] {
         view->getTableView()->resizeColumnsToContents();

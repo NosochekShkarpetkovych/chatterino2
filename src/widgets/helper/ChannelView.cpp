@@ -2151,21 +2151,38 @@ void ChannelView::mouseMoveEvent(QMouseEvent *event)
                  event->modifiers() == Qt::ShiftModifier);
 
             auto image = imageElement->image();
-            float factor =
+
+            // explicit size: the longer side is about 64 px (times the
+            // tooltip scale setting), regardless of the size of the image file
+            const float target =
+                64.0F *
                 getTooltipScale(getSettings()->emoteTooltipScale.getEnum());
-            // small source images (24px) are enlarged to roughly 64px
-            if (image != nullptr)
+            int w = 0;
+            int h = 0;
+            if (image != nullptr && image->width() > 0 && image->height() > 0)
             {
-                int side = std::max(image->width(), image->height());
-                if (side > 0 && side < 64)
-                {
-                    factor *= std::min(64.0F / static_cast<float>(side), 4.0F);
-                }
+                const float side = static_cast<float>(
+                    std::max(image->width(), image->height()));
+                w = std::max(1, static_cast<int>(
+                                    target * static_cast<float>(image->width()) /
+                                    side));
+                h = std::max(
+                    1, static_cast<int>(target *
+                                        static_cast<float>(image->height()) /
+                                        side));
+            }
+            else
+            {
+                w = static_cast<int>(target);
+                h = static_cast<int>(target);
             }
 
-            this->tooltipWidget_->setOne(TooltipEntry::scaled(
-                showThumbnail ? image : nullptr, element->getTooltip(),
-                factor));
+            this->tooltipWidget_->setOne(TooltipEntry{
+                .image = showThumbnail ? image : nullptr,
+                .text = element->getTooltip(),
+                .customWidth = w,
+                .customHeight = h,
+            });
         }
         else if (auto *linkElement = dynamic_cast<LinkElement *>(element))
         {

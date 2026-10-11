@@ -361,6 +361,8 @@ public:
     /// Main window: hide the update button, custom window title (empty = default)
     BoolSetting hideUpdateButton = {"/appearance/hideUpdateButton", false};
     QStringSetting customWindowTitle = {"/appearance/customWindowTitle", ""};
+    // UI language: "en" (default) or "uk" (Ukrainian), see common/UiTranslation.hpp
+    QStringSetting uiLanguage = {"/appearance/uiLanguage", "en"};
 
     /// Size and position of the settings window (x/y -100000 = not saved yet)
     IntSetting settingsDialogWidth = {"/ui/settingsDialog/width", 1007};

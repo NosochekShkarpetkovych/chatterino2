@@ -9,6 +9,7 @@
 #include "common/Common.hpp"
 #include "common/Modes.hpp"
 #include "common/QLogging.hpp"
+#include "common/UiTranslation.hpp"
 #include "common/Version.hpp"
 #include "controllers/accounts/AccountController.hpp"
 #include "controllers/hotkeys/HotkeyController.hpp"
@@ -117,6 +118,9 @@ Window::Window(WindowType type, QWidget *parent)
             this->onAccountSelected();
         },
         this->signalHolder_, false);
+
+    // optional Ukrainian UI (Settings -> Language)
+    uitr::install();
 }
 
 WindowType Window::getType()
@@ -833,7 +837,7 @@ void Window::onAccountSelected()
 #if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
     if (user->isAnon())
     {
-        windowTitle += " - not logged in";
+        windowTitle += uitr::tr(" - not logged in");
     }
     else
     {
@@ -843,7 +847,7 @@ void Window::onAccountSelected()
 
     if (getApp()->getArgs().safeMode)
     {
-        windowTitle += " (safe mode)";
+        windowTitle += uitr::tr(" (safe mode)");
     }
 
     this->setWindowTitle(windowTitle);
@@ -853,7 +857,7 @@ void Window::onAccountSelected()
     {
         if (user->isAnon())
         {
-            this->userLabel_->setText("anonymous");
+            this->userLabel_->setText(uitr::tr("anonymous"));
         }
         else
         {

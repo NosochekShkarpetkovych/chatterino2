@@ -218,7 +218,13 @@ public:
         auto updateSetting = [combo, &setting, setValue = std::move(setValue)](
                                  const int newIndex) {
             setting = setValue(DropdownArgs{
-                .value = combo->itemText(newIndex),
+                // the original (English) text is kept in role UserRole + 100
+                // when the UI is translated, see common/UiTranslation.hpp
+                .value = combo->itemData(newIndex, Qt::UserRole + 100)
+                                 .isValid()
+                             ? combo->itemData(newIndex, Qt::UserRole + 100)
+                                   .toString()
+                             : combo->itemText(newIndex),
                 .index = combo->currentIndex(),
                 .combobox = combo,
             });

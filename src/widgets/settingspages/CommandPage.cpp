@@ -12,6 +12,7 @@
 #include "util/CombinePath.hpp"
 #include "util/LayoutCreator.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QColor>
 #include <QHeaderView>
@@ -96,8 +97,7 @@ CommandPage::CommandPage()
                      .getElement();
 
     this->view->setTitles({"Trigger", "Command", "Show In\nMessage Menu"});
-    this->view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        1, QHeaderView::Stretch);
+    makeColumnsResizable(this->view->getTableView(), {1});
     // We can safely ignore this signal connection since we own the view
     std::ignore = this->view->addButtonPressed.connect([] {
         getApp()->getCommands()->items.append(

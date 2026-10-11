@@ -14,6 +14,7 @@
 #include "singletons/Settings.hpp"
 #include "util/LayoutCreator.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QCheckBox>
 #include <QGroupBox>
@@ -55,10 +56,7 @@ void addPhrasesTab(LayoutCreator<QVBoxLayout> layout)
             .getElement();
     view->setTitles(
         {"Pattern", "Regex", "Case-sensitive", "Block", "Replacement"});
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        QHeaderView::Fixed);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        0, QHeaderView::Stretch);
+    makeColumnsResizable(view->getTableView(), {0});
     view->addRegexHelpLink();
 
     QTimer::singleShot(1, [view] {

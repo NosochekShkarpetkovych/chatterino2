@@ -20,6 +20,7 @@
 #include "widgets/dialogs/ColorPickerDialog.hpp"
 #include "widgets/helper/color/ColorItemDelegate.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QFileDialog>
 #include <QHeaderView>
@@ -81,10 +82,7 @@ HighlightingPage::HighlightingPage()
                                  "Flash\ntaskbar", "Enable\nregex",
                                  "Case-\nsensitive", "Play\nsound",
                                  "Custom\nsound", "Color"});
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    QHeaderView::Fixed);
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    0, QHeaderView::Stretch);
+                makeColumnsResizable(view->getTableView(), {0});
                 view->getTableView()->setItemDelegateForColumn(
                     HighlightModel::Column::Color, new ColorItemDelegate(view));
 
@@ -136,10 +134,7 @@ HighlightingPage::HighlightingPage()
                                  "Case-\nsensitive", "Play\nsound",
                                  "Custom\nsound", "Color", "Special\nphrases",
                                  "Special\ncolor", "Sound only\non phrases"});
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    QHeaderView::Fixed);
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    0, QHeaderView::Stretch);
+                makeColumnsResizable(view->getTableView(), {0});
                 view->getTableView()->setItemDelegateForColumn(
                     UserHighlightModel::Column::Color,
                     new ColorItemDelegate(view));
@@ -186,10 +181,7 @@ HighlightingPage::HighlightingPage()
                                  .getElement();
                 view->setTitles({"Name", "Show In\nMentions", "Flash\ntaskbar",
                                  "Play\nsound", "Custom\nsound", "Color"});
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    QHeaderView::Fixed);
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    0, QHeaderView::Stretch);
+                makeColumnsResizable(view->getTableView(), {0});
                 view->getTableView()->setItemDelegateForColumn(
                     BadgeHighlightModel::Column::Color,
                     new ColorItemDelegate(view));
@@ -244,10 +236,7 @@ HighlightingPage::HighlightingPage()
 
                 view->addRegexHelpLink();
                 view->setTitles({"Username", "Enable\nregex"});
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    QHeaderView::Fixed);
-                view->getTableView()->horizontalHeader()->setSectionResizeMode(
-                    0, QHeaderView::Stretch);
+                makeColumnsResizable(view->getTableView(), {0});
 
                 // fourtf: make class extrend BaseWidget and add this to
                 // dpiChanged

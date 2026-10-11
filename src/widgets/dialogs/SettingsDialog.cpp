@@ -5,6 +5,7 @@
 #include "widgets/dialogs/SettingsDialog.hpp"
 
 #include "Application.hpp"
+#include "common/UiTranslation.hpp"
 #include "common/Args.hpp"
 #include "common/QLogging.hpp"
 #include "controllers/commands/CommandController.hpp"
@@ -22,6 +23,7 @@
 #include "widgets/settingspages/HighlightingPage.hpp"
 #include "widgets/settingspages/IgnoresPage.hpp"
 #include "widgets/settingspages/KeyboardSettingsPage.hpp"
+#include "widgets/settingspages/LanguagePage.hpp"
 #include "widgets/settingspages/ModerationPage.hpp"
 #include "widgets/settingspages/NicknamesPage.hpp"
 #include "widgets/settingspages/NotificationPage.hpp"
@@ -47,7 +49,8 @@ SettingsDialog::SettingsDialog(QWidget *parent)
           parent)
 {
     this->setObjectName("SettingsDialog");
-    this->setWindowTitle("Chatterino Settings");
+    uitr::install();
+    this->setWindowTitle(uitr::tr("Chatterino Settings"));
     this->setWindowRole(u"chatterino.settings"_s);
     // Disable the ? button in the titlebar until we decide to use it
     this->setWindowFlags(this->windowFlags() &
@@ -110,7 +113,8 @@ void SettingsDialog::setSearchPlaceholderText()
             "(" + searchSeq.toString(QKeySequence::SequenceFormat::NativeText) +
             ")";
     }
-    this->ui_.search->setPlaceholderText("Find in settings... " + searchHotkey);
+    this->ui_.search->setPlaceholderText(uitr::tr("Find in settings... ") +
+                                         searchHotkey);
 }
 
 void SettingsDialog::initUi()
@@ -250,6 +254,7 @@ void SettingsDialog::addTabs()
 
     // clang-format off
     this->addTab([]{return new GeneralPage;},          "General",        ":/settings/about.svg", SettingsTabId::General);
+    this->addTab([]{return new LanguagePage;},         "Language",       ":/settings/about.svg");
     this->ui_.tabContainer->addSpacing(16);
     this->addTab([]{return new AccountsPage;},         "Accounts",       ":/settings/accounts.svg", SettingsTabId::Accounts);
     this->addTab([]{return new NicknamesPage;},        "Nicknames",      ":/settings/accounts.svg");
@@ -276,7 +281,8 @@ void SettingsDialog::addTab(std::function<SettingsPage *()> page,
                             SettingsTabId id, Qt::Alignment alignment)
 {
     auto *tab =
-        new SettingsDialogTab(this, std::move(page), name, iconPath, id);
+        new SettingsDialogTab(this, std::move(page), uitr::tr(name), iconPath,
+                              id);
     tab->setFixedHeight(static_cast<int>(30 * this->dpi_));
 
     this->ui_.tabContainer->addWidget(tab, 0, alignment);

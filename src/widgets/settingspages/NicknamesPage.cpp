@@ -10,6 +10,7 @@
 #include "singletons/WindowManager.hpp"
 #include "util/LayoutCreator.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QHeaderView>
 #include <QTableView>
@@ -35,12 +36,7 @@ NicknamesPage::NicknamesPage()
     this->view_ = view;
 
     view->setTitles({"Username", "Nickname", "Enable regex", "Case-sensitive"});
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        QHeaderView::Fixed);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        0, QHeaderView::Stretch);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        1, QHeaderView::Stretch);
+    makeColumnsResizable(view->getTableView(), {0, 1});
 
     // We can safely ignore this signal connection since we own the view
     std::ignore = view->addButtonPressed.connect([] {

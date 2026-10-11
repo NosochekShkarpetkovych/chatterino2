@@ -13,6 +13,7 @@
 #include "util/LayoutCreator.hpp"
 #include "widgets/dialogs/EditHotkeyDialog.hpp"
 #include "widgets/helper/EditableModelView.hpp"
+#include "widgets/settingspages/TableColumns.hpp"
 
 #include <QFormLayout>
 #include <QHeaderView>
@@ -65,10 +66,7 @@ KeyboardSettingsPage::KeyboardSettingsPage()
     view->setTitles({"Hotkey name", "Keybinding"});
     view->getTableView()->horizontalHeader()->setVisible(true);
     view->getTableView()->horizontalHeader()->setStretchLastSection(false);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        QHeaderView::ResizeToContents);
-    view->getTableView()->horizontalHeader()->setSectionResizeMode(
-        1, QHeaderView::Stretch);
+    makeColumnsResizable(view->getTableView(), {1});
 
     // We can safely ignore this signal connection since we own the view
     std::ignore = view->addButtonPressed.connect([view] {
