@@ -377,6 +377,8 @@ public:
     QStringSetting ytLeaderboardColor = {"/ytChat/leaderboardColor",
                                          "#ccf4b400"};
     QStringSetting ytUserColors = {"/ytChat/userColors", "[]"};
+    BoolSetting ytShowStatusMessages = {"/ytChat/showStatusMessages", true};
+    IntSetting ytStatusGraceSeconds = {"/ytChat/statusGraceSeconds", 10};
 
     /// Size and position of the settings window (x/y -100000 = not saved yet)
     IntSetting settingsDialogWidth = {"/ui/settingsDialog/width", 1007};

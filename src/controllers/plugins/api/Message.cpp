@@ -605,6 +605,8 @@ void createUserType(sol::table &c2)
         tbl["event_color"] = settings->ytEventColor.getValue().toStdString();
         tbl["leaderboard_color"] =
             settings->ytLeaderboardColor.getValue().toStdString();
+        tbl["show_status_messages"] = settings->ytShowStatusMessages.getValue();
+        tbl["status_grace_seconds"] = settings->ytStatusGraceSeconds.getValue();
 
         sol::table colors = lua.create_table();
         const auto doc = QJsonDocument::fromJson(

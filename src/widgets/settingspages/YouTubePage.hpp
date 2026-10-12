@@ -309,6 +309,24 @@ public:
                 "when connecting to a stream. 0 shows none.")
             ->addTo(*view);
 
+        // --- connection status messages
+        view->addSubtitle("Connection messages");
+        SettingWidget::checkbox("Show connection messages",
+                                s.ytShowStatusMessages)
+            ->addTo(*view);
+        view->addDescription(
+            "Short outages (for example a 503 error from YouTube) are retried "
+            "silently. A message appears only if the problem lasts longer than "
+            "the time below, and a second one when the connection is restored.");
+        SettingWidget::intInput("Report problems that last longer than (seconds)",
+                                s.ytStatusGraceSeconds,
+                                {
+                                    .min = 0,
+                                    .max = 120,
+                                    .singleStep = 1,
+                                })
+            ->addTo(*view);
+
         // --- user colors
         view->addSubtitle("User name colors");
         view->addDescription(
