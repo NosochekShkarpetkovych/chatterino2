@@ -356,10 +356,6 @@ public:
                                 })
             ->addTo(*view);
 
-        SettingWidget::checkbox("Show message reply button", s.showReplyButton)
-            ->setTooltip("Show a reply button next to every chat message")
-            ->addTo(*view);
-
         // --- user colors
         view->addSubtitle("User name colors");
         view->addDescription(
@@ -389,8 +385,6 @@ public:
         addLink("General: Window title", "General", "Window title");
         addLink("General: Hide the update button", "General",
                 "update button");
-        addLink("General: Show send message button", "General",
-                "send message button");
         addLink("General: Moderate menu", "General", "moderate menu");
         addLink("General: Message menu", "General", "message menu");
         addLink("Language", "Language", "");
