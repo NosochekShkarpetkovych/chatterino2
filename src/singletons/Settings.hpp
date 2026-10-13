@@ -363,6 +363,10 @@ public:
     QStringSetting customWindowTitle = {"/appearance/customWindowTitle", ""};
     // UI language: "en" (default) or "uk" (Ukrainian), see common/UiTranslation.hpp
     QStringSetting uiLanguage = {"/appearance/uiLanguage", "en"};
+    // Keep the message right-click menu (copy, reply, moderation) in English
+    // even when the Ukrainian UI is on, see common/UiTranslation.hpp
+    BoolSetting uiKeepMessageMenuEnglish = {
+        "/appearance/uiKeepMessageMenuEnglish", false};
 
     // yt-chat plugin (Settings -> YouTube). The plugin reads these through
     // c2.yt_settings(), see controllers/plugins/api/Message.cpp

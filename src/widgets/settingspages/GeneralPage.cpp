@@ -1750,6 +1750,14 @@ void GeneralPage::initLayout(GeneralPageView &layout)
 
     layout.addSubtitle("Message menu (right click on a message)");
 
+    SettingWidget::checkbox("Keep message menu in English",
+                            s.uiKeepMessageMenuEnglish)
+        ->setTooltip("Keeps the right-click menu of a message (copy, reply, "
+                     "moderation) in English even if the interface language "
+                     "is Ukrainian. Applies the next time the menu is opened.")
+        ->addKeywords({"message menu", "moderate menu", "language", "english"})
+        ->addTo(layout);
+
     SettingWidget::checkbox("Show \"Copy message\"", s.msgMenuCopy)
         ->addKeywords({"message menu"})
         ->addTo(layout);

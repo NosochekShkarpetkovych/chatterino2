@@ -54,6 +54,11 @@
 
 namespace chatterino::uitr {
 
+/// Dynamic property that marks a QMenu as "message menu". The menu and all of
+/// its submenus stay in English when Settings -> General -> "Keep message menu
+/// in English" is on. (ChannelView sets it with the same literal name.)
+inline constexpr const char *KEEP_ENGLISH_PROPERTY = "uitrKeepEnglish";
+
 /// Item data role where the original (English) text of a translated combo box
 /// item is kept. Some settings use the item text as their value.
 inline constexpr int ORIGINAL_TEXT_ROLE = Qt::UserRole + 100;
@@ -575,6 +580,24 @@ inline void translateWidget(QWidget *w)
     }
 }
 
+/// True if `w` is a menu (or a submenu of a menu) that must not be translated.
+inline bool keepEnglish(QWidget *w)
+{
+    auto *settings = getSettings();
+    if (settings == nullptr || !settings->uiKeepMessageMenuEnglish.getValue())
+    {
+        return false;
+    }
+    for (QWidget *p = w; p != nullptr; p = p->parentWidget())
+    {
+        if (p->property(KEEP_ENGLISH_PROPERTY).toBool())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 class Filter : public QObject
 {
 public:
@@ -590,6 +613,11 @@ public:
             watched->isWidgetType() && active())
         {
             auto *widget = static_cast<QWidget *>(watched);
+            if (dynamic_cast<QMenu *>(widget) != nullptr &&
+                keepEnglish(widget))
+            {
+                return false;
+            }
             if (type == QEvent::Show ||
                 dynamic_cast<QMenu *>(widget) != nullptr)
             {

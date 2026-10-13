@@ -2721,6 +2721,9 @@ void ChannelView::addContextMenuItems(
 {
     auto *menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
+    // Lets the UI translation (common/UiTranslation.hpp) skip this menu and
+    // its submenus if "Keep message menu in English" is on.
+    menu->setProperty("uitrKeepEnglish", true);
 
     // Add image options if the element clicked contains an image (e.g. a badge or an emote)
     addImageContextMenuItems(menu, hoveredElement);
