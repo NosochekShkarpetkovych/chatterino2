@@ -45,6 +45,15 @@ public:
         SettingWidget::dropdown("Interface language", s.uiLanguage, languages)
             ->addTo(*view);
 
+        SettingWidget::checkbox("Keep message menu in English",
+                                s.uiKeepMessageMenuEnglish)
+            ->setTooltip("Keeps the right-click menu of a message (copy, "
+                         "reply, moderation) in English even if the "
+                         "interface language is Ukrainian. Applies the next "
+                         "time the menu is opened.")
+            ->addKeywords({"message menu", "moderate menu", "english"})
+            ->addTo(*view);
+
         view->addStretch();
     }
 };
