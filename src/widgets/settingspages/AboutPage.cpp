@@ -69,6 +69,10 @@ AboutPage::AboutPage()
             }
 
             string +=
+                "<br>Fork by <a href=\"https://t.me/Shkarpetkovych\">"
+                "Shkarpetkovych</a>";
+
+            string +=
                 "<br><br>Your settings directory is located at <a href=\"";
             string +=
                 QUrl::fromLocalFile(getApp()->getPaths().settingsDirectory)
@@ -225,9 +229,9 @@ AboutPage::AboutPage()
                 }
                 contributorLines.insert(
                     insertAt,
-                    QStringLiteral("NosochekShkarpetkovych | "
-                                   "https://github.com/NosochekShkarpetkovych "
-                                   "| "));
+                    QStringLiteral("NosochokShkarpetkovych | "
+                                   "https://t.me/Shkarpetkovych "
+                                   "| :/avatars/shkarpetkovych.png"));
             }
 
             for (QString line : contributorLines)
