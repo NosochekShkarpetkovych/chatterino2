@@ -356,37 +356,8 @@ public:
                                 })
             ->addTo(*view);
 
-        // --- right-click menus (same settings as on the General page)
-        view->addSubtitle("Moderate menu (right click on a message)");
-        SettingWidget::checkbox("Show \"Delete message\"", s.modMenuDelete)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Pin\" / \"Unpin\" (Twitch only)",
-                                s.modMenuPin)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Timeout\" / \"Untimeout\"",
-                                s.modMenuTimeout)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Ban\" / \"Unban\"", s.modMenuBan)
-            ->addTo(*view);
-
-        view->addSubtitle("Message menu (right click on a message)");
-        SettingWidget::checkbox("Show \"Copy message\"", s.msgMenuCopy)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Copy full message\"",
-                                s.msgMenuCopyFull)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Reply to message\"", s.msgMenuReply)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Reply to original thread\"",
-                                s.msgMenuReplyThread)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"View thread\"", s.msgMenuViewThread)
-            ->addTo(*view);
-        SettingWidget::checkbox("Show \"Go to message\"", s.msgMenuGoTo)
-            ->addTo(*view);
         SettingWidget::checkbox("Show message reply button", s.showReplyButton)
-            ->setTooltip(
-                "Show a reply button next to every chat message")
+            ->setTooltip("Show a reply button next to every chat message")
             ->addTo(*view);
 
         // --- user colors
@@ -420,9 +391,8 @@ public:
                 "update button");
         addLink("General: Show send message button", "General",
                 "send message button");
-        addLink("Commands: show in message menu", "Commands", "");
-        addLink("Moderation: moderation buttons", "Moderation", "");
-        addLink("Highlights: users and badges", "Highlights", "");
+        addLink("General: Moderate menu", "General", "moderate menu");
+        addLink("General: Message menu", "General", "message menu");
         addLink("Language", "Language", "");
         view->addWidget(links);
 

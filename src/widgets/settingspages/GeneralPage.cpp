@@ -1731,38 +1731,48 @@ void GeneralPage::initLayout(GeneralPageView &layout)
     layout.addSubtitle("Moderate menu (right click on a message)");
 
     SettingWidget::checkbox("Show \"Delete message\"", s.modMenuDelete)
+        ->addKeywords({"moderate menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Pin\" / \"Unpin\" (Twitch only)",
                             s.modMenuPin)
+        ->addKeywords({"moderate menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Timeout\" / \"Untimeout\"",
                             s.modMenuTimeout)
+        ->addKeywords({"moderate menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Ban\" / \"Unban\"", s.modMenuBan)
+        ->addKeywords({"moderate menu"})
         ->addTo(layout);
 
     layout.addSubtitle("Message menu (right click on a message)");
 
     SettingWidget::checkbox("Show \"Copy message\"", s.msgMenuCopy)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Copy full message\"", s.msgMenuCopyFull)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Reply to message\"", s.msgMenuReply)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Reply to original thread\"",
                             s.msgMenuReplyThread)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"View thread\"", s.msgMenuViewThread)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     SettingWidget::checkbox("Show \"Go to message\"", s.msgMenuGoTo)
+        ->addKeywords({"message menu"})
         ->addTo(layout);
 
     layout.addSubtitle("Main window");
