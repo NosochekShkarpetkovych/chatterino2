@@ -47,6 +47,11 @@ public:
                            SettingsDialogPreference preferredTab =
                                SettingsDialogPreference::NoPreference);
 
+    /// Jumps to the tab `tabName` (English name, e.g. "General") of the
+    /// already open settings dialog and, if `searchQuery` is not empty,
+    /// filters the settings by it. Used by the links on Settings -> YouTube.
+    static void jumpTo(const QString &tabName, const QString &searchQuery = {});
+
 protected:
     void scaleChangedEvent(float newDpi) override;
     void showEvent(QShowEvent *) override;

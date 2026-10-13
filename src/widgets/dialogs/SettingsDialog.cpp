@@ -356,10 +356,42 @@ SettingsDialogTab *SettingsDialog::tab(SettingsTabId id)
     return nullptr;
 }
 
+namespace {
+
+QPointer<SettingsDialog> &dialogInstance()
+{
+    static QPointer<SettingsDialog> instance;
+    return instance;
+}
+
+}  // namespace
+
+void SettingsDialog::jumpTo(const QString &tabName, const QString &searchQuery)
+{
+    auto &instance = dialogInstance();
+    if (!instance)
+    {
+        return;
+    }
+
+    // may hide tabs that do not match the query
+    instance->setElementFilter(searchQuery);
+
+    const QString translated = uitr::tr(tabName);
+    for (auto *tab : instance->tabs_)
+    {
+        if (tab->name() == tabName || tab->name() == translated)
+        {
+            instance->selectTab(tab);
+            break;
+        }
+    }
+}
+
 void SettingsDialog::showDialog(QWidget *parent,
                                 SettingsDialogPreference preferredTab)
 {
-    static QPointer<SettingsDialog> instance;
+    auto &instance = dialogInstance();
     if (instance)
     {
         instance->refresh();

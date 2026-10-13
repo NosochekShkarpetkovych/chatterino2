@@ -196,11 +196,41 @@ AboutPage::AboutPage()
                 qCWarning(chatterinoWidget) << "Resources not loaded";
             }
 
-            QTextStream stream(&contributorsFile);
+            QStringList contributorLines;
+            {
+                QTextStream stream(&contributorsFile);
+                QString rawLine;
+                while (stream.readLineInto(&rawLine))
+                {
+                    contributorLines.push_back(rawLine);
+                }
+            }
 
-            QString line;
+            // Author of this fork: shown at the end of the first group
+            // (the developers), before the next "@header".
+            {
+                qsizetype insertAt = contributorLines.size();
+                bool firstHeaderSeen = false;
+                for (qsizetype i = 0; i < contributorLines.size(); ++i)
+                {
+                    if (contributorLines[i].startsWith(u"@header"))
+                    {
+                        if (firstHeaderSeen)
+                        {
+                            insertAt = i;
+                            break;
+                        }
+                        firstHeaderSeen = true;
+                    }
+                }
+                contributorLines.insert(
+                    insertAt,
+                    QStringLiteral("NosochekShkarpetkovych | "
+                                   "https://github.com/NosochekShkarpetkovych "
+                                   "| "));
+            }
 
-            while (stream.readLineInto(&line))
+            for (QString line : contributorLines)
             {
                 if (line.isEmpty() || line.startsWith('#'))
                 {

@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include "Application.hpp"
 #include "singletons/Settings.hpp"
+#include "singletons/WindowManager.hpp"
 #include "widgets/dialogs/ColorPickerDialog.hpp"
+#include "widgets/dialogs/SettingsDialog.hpp"
 #include "widgets/helper/color/ColorButton.hpp"
 #include "widgets/settingspages/GeneralPageView.hpp"
 #include "widgets/settingspages/SettingsPage.hpp"
@@ -273,6 +276,32 @@ public:
             "the Verified badge. Channel member badges always come from "
             "YouTube.");
 
+        // same settings as on the General page (shown here too)
+        SettingWidget::checkbox("Show channel badges (owner, moderator)",
+                                s.showBadgesChannelAuthority)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show channel member badges",
+                                s.showBadgesSubscription)
+            ->addTo(*view);
+        SettingWidget::checkbox("Twitch icon", s.showTwitchPlatformIcon)
+            ->setTooltip("Small Twitch logo before every Twitch message")
+            ->addTo(*view);
+        SettingWidget::checkbox("YouTube icon", s.showYoutubePlatformIcon)
+            ->setTooltip(
+                "Small YouTube logo before every message from the yt-chat "
+                "plugin")
+            ->addTo(*view);
+        s.showTwitchPlatformIcon.connect(
+            []() {
+                getApp()->getWindows()->forceLayoutChannelViews();
+            },
+            false);
+        s.showYoutubePlatformIcon.connect(
+            []() {
+                getApp()->getWindows()->forceLayoutChannelViews();
+            },
+            false);
+
         // --- events
         view->addSubtitle("Events");
         SettingWidget::checkbox("Show events (new members, Super Chats, gifts)",
@@ -327,6 +356,39 @@ public:
                                 })
             ->addTo(*view);
 
+        // --- right-click menus (same settings as on the General page)
+        view->addSubtitle("Moderate menu (right click on a message)");
+        SettingWidget::checkbox("Show \"Delete message\"", s.modMenuDelete)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Pin\" / \"Unpin\" (Twitch only)",
+                                s.modMenuPin)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Timeout\" / \"Untimeout\"",
+                                s.modMenuTimeout)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Ban\" / \"Unban\"", s.modMenuBan)
+            ->addTo(*view);
+
+        view->addSubtitle("Message menu (right click on a message)");
+        SettingWidget::checkbox("Show \"Copy message\"", s.msgMenuCopy)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Copy full message\"",
+                                s.msgMenuCopyFull)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Reply to message\"", s.msgMenuReply)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Reply to original thread\"",
+                                s.msgMenuReplyThread)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"View thread\"", s.msgMenuViewThread)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show \"Go to message\"", s.msgMenuGoTo)
+            ->addTo(*view);
+        SettingWidget::checkbox("Show message reply button", s.showReplyButton)
+            ->setTooltip(
+                "Show a reply button next to every chat message")
+            ->addTo(*view);
+
         // --- user colors
         view->addSubtitle("User name colors");
         view->addDescription(
@@ -335,6 +397,34 @@ public:
             "chat) or the channel ID. Turn the check box off to use the "
             "color from YouTube again.");
         view->addWidget(new YtUserColorsEditor(s.ytUserColors));
+
+        // --- links to the other settings that were added in this fork
+        view->addSubtitle("Other settings of this fork");
+        view->addDescription(
+            "These settings are not specific to YouTube. Click to open them:");
+
+        auto *links = new QWidget;
+        auto *linksLayout = new QVBoxLayout(links);
+        linksLayout->setContentsMargins(0, 0, 0, 0);
+        const auto addLink = [&](const QString &text, const QString &tab,
+                                 const QString &query) {
+            auto *button = new QPushButton(text);
+            QObject::connect(button, &QPushButton::clicked, button,
+                             [tab, query] {
+                                 SettingsDialog::jumpTo(tab, query);
+                             });
+            linksLayout->addWidget(button, 0, Qt::AlignLeft);
+        };
+        addLink("General: Window title", "General", "Window title");
+        addLink("General: Hide the update button", "General",
+                "update button");
+        addLink("General: Show send message button", "General",
+                "send message button");
+        addLink("Commands: show in message menu", "Commands", "");
+        addLink("Moderation: moderation buttons", "Moderation", "");
+        addLink("Highlights: users and badges", "Highlights", "");
+        addLink("Language", "Language", "");
+        view->addWidget(links);
 
         view->addStretch();
     }
